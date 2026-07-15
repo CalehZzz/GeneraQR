@@ -1,0 +1,2278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>GeneraQR – Generador de Códigos QR Gratis Online con Logo | Sin Registro</title>
+<meta name="description" content="Crea códigos QR gratis y personalizados en segundos. Elige colores, formas, degradados y añade tu logo. Sin registro, sin marcas de agua, todo se genera en tu navegador. Descarga en PNG hasta 2048px.">
+<meta name="keywords" content="generador de qr, generador de codigos qr, crear qr gratis, qr con logo, generador qr personalizado, codigo qr online, qr gratis sin registro, generaqr">
+<meta name="author" content="GeneraQR">
+<meta name="robots" content="index, follow">
+<meta name="language" content="Spanish">
+<link rel="canonical" href="https://generaqr.xyz/">
+
+<!-- Open Graph / Facebook / WhatsApp -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://generaqr.xyz/">
+<meta property="og:site_name" content="GeneraQR">
+<meta property="og:title" content="GeneraQR – Generador de Códigos QR Gratis con Logo">
+<meta property="og:description" content="Crea códigos QR personalizados en segundos: colores, degradados, formas y tu propio logo. 100% gratis, sin registro y sin marcas de agua.">
+<meta property="og:image" content="https://generaqr.xyz/og-image.png">
+<meta property="og:locale" content="es_ES">
+
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="GeneraQR – Generador de Códigos QR Gratis con Logo">
+<meta name="twitter:description" content="Crea códigos QR personalizados en segundos: colores, degradados, formas y tu propio logo. 100% gratis y sin registro.">
+<meta name="twitter:image" content="https://generaqr.xyz/og-image.png">
+
+<meta name="theme-color" content="#0A84FF">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230A84FF'/%3E%3Crect x='20' y='20' width='22' height='22' rx='4' fill='white'/%3E%3Crect x='58' y='20' width='22' height='22' rx='4' fill='white'/%3E%3Crect x='20' y='58' width='22' height='22' rx='4' fill='white'/%3E%3Crect x='62' y='62' width='14' height='14' rx='3' fill='white'/%3E%3C/svg%3E">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&family=Great+Vibes&family=Cormorant+Garamond:wght@500;600;700&family=Oswald:wght@500;600;700&family=Poppins:wght@600;700;800&family=JetBrains+Mono:wght@500;600;700&family=Montserrat:wght@600;700;800&family=Bebas+Neue&family=Dancing+Script:wght@600;700&family=Space+Grotesk:wght@600;700&family=Merriweather:wght@700;900&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/qr-code-styling@1.9.2/lib/qr-code-styling.js"></script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "GeneraQR",
+  "url": "https://generaqr.xyz/",
+  "description": "Generador de códigos QR gratuito y personalizable con soporte para logos, colores, degradados y formas de esquina. Todo se procesa localmente en el navegador, sin subir datos a ningún servidor.",
+  "applicationCategory": "UtilityApplication",
+  "operatingSystem": "Any",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "featureList": [
+    "Generación de códigos QR ilimitada y gratuita",
+    "Personalización de colores y degradados",
+    "Inserción de logo con recorte integrado",
+    "Formas de puntos y esquinas personalizables",
+    "Descarga en PNG hasta 2048px",
+    "Procesamiento 100% local, sin enviar datos a servidores"
+  ]
+}
+</script>
+<style>
+  :root{
+    --bg:#F5F5F7;
+    --surface:#FFFFFF;
+    --surface-soft:#FBFBFC;
+    --text:#1D1D1F;
+    --text-dim:#6E6E73;
+    --text-faint:#A1A1A6;
+    --accent:#0A84FF;
+    --accent-soft:rgba(10,132,255,0.10);
+    --accent-2:#FF375F;
+    --accent-2-soft:rgba(255,55,95,0.10);
+    --border:#E5E5EA;
+    --shadow-sm:0 1px 2px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.06);
+    --shadow-md:0 2px 8px rgba(0,0,0,0.04), 0 10px 30px rgba(0,0,0,0.06);
+    --shadow-lg:0 8px 24px rgba(0,0,0,0.08), 0 24px 64px rgba(0,0,0,0.10);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    min-height:100vh;
+    position:relative;
+    overflow-x:hidden;
+  }
+  body::before, body::after{
+    content:"";
+    position:fixed;
+    width:520px;height:520px;
+    border-radius:50%;
+    filter:blur(90px);
+    z-index:0;
+    opacity:0.35;
+    pointer-events:none;
+  }
+  body::before{
+    background:radial-gradient(circle, #7ee8d8, transparent 70%);
+    top:-180px; left:-160px;
+  }
+  body::after{
+    background:radial-gradient(circle, #ffb3c6, transparent 70%);
+    bottom:-200px; right:-180px;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:48px 22px 80px;position:relative;z-index:1;}
+
+  header{margin-bottom:40px;text-align:left;}
+  .eyebrow{
+    font-size:13px;
+    font-weight:600;
+    letter-spacing:0.02em;
+    color:var(--accent);
+    text-transform:uppercase;
+    margin-bottom:10px;
+  }
+  h1{
+    font-size:clamp(32px,5vw,50px);
+    font-weight:800;
+    letter-spacing:-0.02em;
+    margin:0 0 10px;
+    color:var(--text);
+  }
+  header p{
+    color:var(--text-dim);
+    font-size:16px;
+    max-width:560px;
+    line-height:1.55;
+    margin:0;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns:1.15fr 1fr;
+    gap:22px;
+    align-items:start;
+  }
+  @media (max-width:900px){
+    .grid{grid-template-columns:1fr;}
+  }
+
+  .stack{display:flex;flex-direction:column;gap:18px;}
+
+  /* tab navigation for option groups */
+  .tabs{
+    display:flex;
+    gap:6px;
+    background:var(--surface);
+    border-radius:18px;
+    padding:6px;
+    box-shadow:var(--shadow-sm);
+    position:sticky;
+    top:24px;
+    z-index:5;
+  }
+  .tab-btn{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    border:none;
+    background:transparent;
+    color:var(--text-dim);
+    font-family:inherit;
+    font-size:13px;
+    font-weight:600;
+    padding:11px 8px;
+    border-radius:13px;
+    cursor:pointer;
+    transition:background .15s ease, color .15s ease;
+  }
+  .tab-btn .tab-num{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:16px;height:16px;
+    border-radius:50%;
+    background:var(--border);
+    color:var(--text-dim);
+    font-size:10px;
+    font-weight:700;
+    flex-shrink:0;
+  }
+  .tab-btn.active{background:var(--accent);color:#fff;}
+  .tab-btn.active .tab-num{background:rgba(255,255,255,0.25);color:#fff;}
+  .tab-btn.done .tab-num::before{content:"✓";}
+  @media (max-width:520px){
+    .tab-btn span.tab-label{display:none;}
+  }
+
+  .tab-panel{display:none;flex-direction:column;gap:18px;}
+  .tab-panel.active{display:flex;}
+
+  .card{
+    background:var(--surface);
+    border-radius:24px;
+    padding:26px;
+    box-shadow:var(--shadow-md);
+  }
+  .card-title{
+    font-size:17px;
+    font-weight:700;
+    letter-spacing:-0.01em;
+    margin:0 0 4px;
+  }
+  .card-subtitle{
+    font-size:13px;
+    color:var(--text-dim);
+    margin:0 0 18px;
+    line-height:1.4;
+  }
+
+  .field{margin-bottom:20px;}
+  .field:last-child{margin-bottom:0;}
+  label.field-label{
+    display:block;
+    font-size:12px;
+    font-weight:600;
+    letter-spacing:0.01em;
+    color:var(--text-dim);
+    margin-bottom:10px;
+  }
+
+  input[type="text"]{
+    width:100%;
+    background:var(--surface-soft);
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:13px 16px;
+    border-radius:14px;
+    font-size:15px;
+    font-family:inherit;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  input[type="text"]:focus{
+    outline:none;
+    border-color:var(--accent);
+    box-shadow:0 0 0 4px var(--accent-soft);
+  }
+  ::placeholder{color:var(--text-faint);}
+
+  /* pinterest-style pickable card grid */
+  .swatch-grid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:10px;
+  }
+  .swatch-grid.cols-2{grid-template-columns:repeat(2,1fr);}
+  .swatch{
+    background:var(--surface-soft);
+    border:1.5px solid var(--border);
+    border-radius:16px;
+    padding:12px 8px 10px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+    cursor:pointer;
+    transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease, background .12s ease;
+    color:var(--text-dim);
+  }
+  .swatch:hover{transform:translateY(-2px);box-shadow:var(--shadow-sm);color:var(--text);}
+  .swatch.active{
+    border-color:var(--accent);
+    background:var(--accent-soft);
+    color:var(--accent);
+  }
+  .swatch span{font-size:11px;font-weight:600;text-align:center;line-height:1.2;}
+
+  .pattern-icon{
+    width:38px;height:38px;
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    grid-template-rows:repeat(3,1fr);
+    gap:3px;
+  }
+  .pattern-icon .cell{background:currentColor;}
+  .shape-square .cell{border-radius:1px;}
+  .shape-dots .cell{border-radius:50%;}
+  .shape-rounded .cell{border-radius:32%;}
+  .shape-extra-rounded .cell{border-radius:48%;}
+  .shape-classy .cell{border-radius:0 55% 0 55%;}
+  .shape-classy-rounded .cell{border-radius:55% 0 55% 0;}
+
+  .corner-icon{width:38px;height:38px;position:relative;color:currentColor;}
+  .corner-icon .frame{position:absolute;inset:2px;border:5px solid currentColor;}
+  .corner-icon .dot{position:absolute;top:50%;left:50%;width:12px;height:12px;background:currentColor;transform:translate(-50%,-50%);}
+  .frame-square{border-radius:3px;}
+  .frame-dot{border-radius:50%;}
+  .frame-extra-rounded{border-radius:11px;}
+  .dot-square{border-radius:2px;}
+  .dot-dot{border-radius:50%;}
+
+  /* color group */
+  .color-group{
+    border-top:1px solid var(--border);
+    padding-top:18px;
+    margin-top:18px;
+  }
+  .color-group:first-child{border-top:none;padding-top:0;margin-top:0;}
+  .color-group-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:12px;
+  }
+  .color-group-head .field-label{margin-bottom:0;}
+
+  .segmented{
+    display:inline-flex;
+    background:var(--surface-soft);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:2px;
+    gap:2px;
+  }
+  .segmented button{
+    border:none;
+    background:transparent;
+    color:var(--text-dim);
+    font-size:12px;
+    font-weight:600;
+    font-family:inherit;
+    padding:6px 12px;
+    border-radius:8px;
+    cursor:pointer;
+    transition:background .12s ease, color .12s ease;
+  }
+  .segmented button.active{
+    background:var(--surface);
+    color:var(--text);
+    box-shadow:var(--shadow-sm);
+  }
+
+  .color-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  .swatch-input{
+    display:flex;align-items:center;gap:9px;
+    background:var(--surface-soft);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:7px 12px;
+  }
+  input[type="color"]{
+    -webkit-appearance:none;appearance:none;
+    width:28px;height:28px;
+    border:none;border-radius:8px;
+    background:none;cursor:pointer;padding:0;flex-shrink:0;
+  }
+  input[type="color"]::-webkit-color-swatch-wrapper{padding:0;}
+  input[type="color"]::-webkit-color-swatch{border:1px solid var(--border);border-radius:8px;}
+  .hex-val{font-size:12px;color:var(--text-dim);font-weight:500;text-transform:uppercase;}
+
+  .gradient-row{display:none;flex-direction:column;gap:12px;}
+  .gradient-row.show{display:flex;}
+  .gradient-angle{display:none;}
+  .gradient-angle.show{display:block;}
+
+  input[type="range"]{width:100%;accent-color:var(--accent);}
+  .range-label{
+    display:flex;justify-content:space-between;
+    font-size:11px;color:var(--text-dim);
+    margin-top:6px;font-weight:500;
+  }
+
+  .contrast-warning{
+    display:none;align-items:center;gap:6px;
+    margin-top:10px;font-size:12px;font-weight:600;
+    color:#B25000;background:#FFF4E5;
+    padding:8px 12px;border-radius:10px;
+  }
+  .contrast-warning.show{display:flex;}
+
+  /* logo upload */
+  .upload-box{
+    border:1.5px dashed var(--border);
+    border-radius:16px;
+    padding:26px 16px;
+    text-align:center;
+    cursor:pointer;
+    transition:border-color .15s ease, background .15s ease;
+    position:relative;
+    background:var(--surface-soft);
+  }
+  .upload-box:hover{border-color:var(--accent);background:var(--accent-soft);}
+  .upload-box input{position:absolute;inset:0;opacity:0;cursor:pointer;}
+  .upload-box .upload-txt{font-size:13px;color:var(--text-dim);font-weight:500;}
+  .upload-box .upload-txt strong{color:var(--text);}
+
+  .crop-section{display:none;margin-top:14px;}
+  .crop-section.show{display:block;}
+  .crop-stage{
+    width:100%;max-width:280px;aspect-ratio:1/1;
+    margin:0 auto;
+    border-radius:20px;
+    overflow:hidden;
+    background:
+      linear-gradient(45deg, #eceef1 25%, transparent 25%),
+      linear-gradient(-45deg, #eceef1 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #eceef1 75%),
+      linear-gradient(-45deg, transparent 75%, #eceef1 75%);
+    background-size:16px 16px;
+    background-position:0 0, 0 8px, 8px -8px, -8px 0px;
+    background-color:var(--surface-soft);
+    box-shadow:var(--shadow-sm);
+    touch-action:none;
+    cursor:grab;
+  }
+  .crop-stage:active{cursor:grabbing;}
+  #crop-canvas{display:block;width:100%;height:100%;}
+  .crop-controls{max-width:280px;margin:14px auto 0;}
+  .crop-actions{display:flex;gap:10px;max-width:280px;margin:14px auto 0;}
+
+  .logo-preview{
+    display:none;align-items:center;gap:10px;margin-top:14px;
+    background:var(--surface-soft);border:1px solid var(--border);
+    border-radius:14px;padding:9px 10px;
+  }
+  .logo-preview.show{display:flex;}
+  .logo-preview img{width:32px;height:32px;object-fit:cover;border-radius:8px;}
+  .logo-preview span{font-size:12px;color:var(--text-dim);flex:1;font-weight:500;}
+  .logo-preview .pill-btn{
+    background:var(--surface);border:1px solid var(--border);
+    font-size:11px;font-weight:600;padding:6px 10px;border-radius:100px;cursor:pointer;
+    color:var(--text);
+  }
+  .logo-preview .pill-btn.danger{color:var(--accent-2);}
+
+  #logo-color-canvas{
+    width:100%;max-width:180px;aspect-ratio:1/1;
+    border-radius:14px;border:1px solid var(--border);
+    cursor:crosshair;display:block;
+    background:
+      linear-gradient(45deg, #eceef1 25%, transparent 25%),
+      linear-gradient(-45deg, #eceef1 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #eceef1 75%),
+      linear-gradient(-45deg, transparent 75%, #eceef1 75%);
+    background-size:16px 16px;
+    background-position:0 0, 0 8px, 8px -8px, -8px 0px;
+    background-color:var(--surface-soft);
+    transition:box-shadow .15s ease;
+  }
+  #logo-color-canvas.picked{box-shadow:0 0 0 3px var(--accent);}
+  .eyedrop-hint{font-size:11px;color:var(--text-dim);margin-top:8px;font-weight:500;}
+
+  select, .pill-select{
+    width:100%;background:var(--surface-soft);border:1px solid var(--border);
+    color:var(--text);padding:12px 14px;border-radius:12px;font-size:14px;
+    font-family:inherit;cursor:pointer;
+  }
+
+  /* preview */
+  .preview-panel{position:sticky;top:24px;display:flex;flex-direction:column;gap:16px;}
+  .preview-card{
+    background:var(--surface);
+    border-radius:28px;
+    padding:32px;
+    box-shadow:var(--shadow-lg);
+    display:flex;flex-direction:column;align-items:center;gap:22px;
+  }
+  .qr-stage{
+    width:100%;max-width:300px;aspect-ratio:1/1;
+    border-radius:22px;
+    background:#fff;
+    box-shadow:var(--shadow-sm), 0 0 0 1px var(--border);
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;
+    position:relative;
+  }
+  #qr-canvas-holder{width:100%;height:100%;}
+  #qr-canvas-holder canvas{width:100%;height:100%;display:block;}
+  #qr-canvas-holder.pop{animation:pop .38s cubic-bezier(.2,.9,.3,1.3);}
+  @keyframes pop{
+    0%{opacity:0.4;transform:scale(0.96);}
+    100%{opacity:1;transform:scale(1);}
+  }
+  .empty-state{
+    font-size:13px;font-weight:600;color:var(--text-faint);
+    text-align:center;
+  }
+
+  .actions{display:flex;gap:10px;width:100%;max-width:300px;}
+  button.primary{
+    flex:1;background:var(--accent);color:#fff;border:none;
+    padding:14px 18px;border-radius:100px;font-size:14px;font-weight:700;
+    font-family:inherit;cursor:pointer;transition:transform .1s ease, box-shadow .15s ease, background .15s ease;
+  }
+  button.primary:hover{box-shadow:0 6px 18px rgba(10,132,255,0.35);}
+  button.primary:active{transform:scale(0.97);}
+  button.primary:disabled{background:var(--border);color:var(--text-faint);cursor:not-allowed;box-shadow:none;}
+  button.ghost{
+    flex:1;background:var(--surface-soft);color:var(--text);border:1px solid var(--border);
+    padding:14px 18px;border-radius:100px;font-size:14px;font-weight:700;
+    font-family:inherit;cursor:pointer;transition:border-color .15s ease, background .15s ease;
+  }
+  button.ghost:hover{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);}
+  button.pill-btn{
+    background:var(--surface);border:1px solid var(--border);
+    font-size:12px;font-weight:600;padding:9px 14px;border-radius:100px;cursor:pointer;
+    color:var(--text);font-family:inherit;
+  }
+  button.pill-btn:hover{border-color:var(--accent);}
+  button.pill-btn.primary-fill{background:var(--accent);color:#fff;border-color:var(--accent);}
+  button.pill-btn.danger:hover{border-color:var(--accent-2);color:var(--accent-2);}
+
+  .meta-row{
+    font-size:11px;font-weight:600;color:var(--text-faint);
+    display:flex;gap:14px;
+  }
+
+  footer{
+    text-align:center;margin-top:52px;font-size:12px;
+    color:var(--text-faint);font-weight:500;
+  }
+
+  /* ---------- mode toggle (Diseñador / Plantillas) ---------- */
+  .mode-toggle{
+    display:inline-flex;
+    gap:4px;
+    background:var(--surface);
+    border-radius:16px;
+    padding:5px;
+    box-shadow:var(--shadow-sm);
+    margin-bottom:32px;
+  }
+  .mode-btn{
+    border:none;
+    background:transparent;
+    color:var(--text-dim);
+    font-family:inherit;
+    font-size:14px;
+    font-weight:600;
+    padding:10px 18px;
+    border-radius:12px;
+    cursor:pointer;
+    transition:background .15s ease, color .15s ease;
+  }
+  .mode-btn.active{background:var(--accent);color:#fff;}
+  .mode-panel{display:none;}
+  .mode-panel.active{display:block;}
+
+  /* ---------- saved design presets ---------- */
+  .preset-save-row{display:flex;gap:10px;}
+  .preset-save-row input{flex:1;}
+  .preset-save-row button{flex-shrink:0;padding:0 18px;border-radius:14px;}
+  .preset-list{display:flex;flex-direction:column;gap:10px;margin-top:16px;}
+  .preset-card{
+    display:flex;align-items:center;gap:12px;
+    background:var(--surface-soft);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:10px 12px;
+  }
+  .preset-swatch{
+    width:38px;height:38px;border-radius:10px;
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;border:1px solid var(--border);
+  }
+  .preset-dot{width:16px;height:16px;border-radius:50%;box-shadow:0 0 0 2px rgba(255,255,255,0.6);}
+  .preset-info{flex:1;display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0;}
+  .preset-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .preset-actions{display:flex;gap:6px;flex-shrink:0;}
+  .preset-actions .pill-btn{padding:6px 12px;font-size:11px;}
+  .preset-empty{font-size:13px;color:var(--text-faint);text-align:center;margin:16px 0 0;display:none;}
+
+  /* ---------- templates gallery ---------- */
+  .tpl-gallery{display:none;}
+  .tpl-gallery.active{display:block;}
+  .tpl-gallery-head{max-width:600px;margin-bottom:28px;}
+  .tpl-gallery-head h2{font-size:26px;font-weight:800;letter-spacing:-0.01em;margin:0 0 8px;}
+  .tpl-gallery-head p{font-size:15px;color:var(--text-dim);line-height:1.55;margin:0;}
+
+  .tpl-grid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:20px;
+  }
+  @media (max-width:900px){ .tpl-grid{grid-template-columns:repeat(2,1fr);} }
+  @media (max-width:560px){ .tpl-grid{grid-template-columns:1fr;} }
+
+  .tpl-card{
+    position:relative;
+    border-radius:22px;
+    padding:26px 22px;
+    min-height:320px;
+    display:flex;
+    flex-direction:column;
+    box-shadow:var(--shadow-md);
+    overflow:hidden;
+    transition:transform .18s ease, box-shadow .18s ease;
+  }
+  .tpl-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg);}
+  .tpl-tag{
+    align-self:flex-start;
+    font-size:11px;font-weight:700;letter-spacing:0.03em;text-transform:uppercase;
+    background:rgba(255,255,255,0.18);
+    color:inherit;
+    padding:5px 10px;
+    border-radius:20px;
+    margin-bottom:20px;
+  }
+  .tpl-preview-text{font-size:26px;font-weight:800;line-height:1.15;margin-bottom:6px;}
+  .tpl-preview-sub{font-size:13px;font-weight:500;opacity:0.85;margin-bottom:auto;}
+  .tpl-preview-qr-wrap{display:flex;justify-content:center;margin:18px 0 16px;}
+  .tpl-preview-qr{
+    width:64px;height:64px;
+    background:rgba(255,255,255,0.94);
+    border-radius:14px;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 6px 16px rgba(0,0,0,0.18);
+  }
+  .tpl-edit-btn{
+    border:none;
+    background:rgba(255,255,255,0.16);
+    color:inherit;
+    font-family:inherit;
+    font-size:13px;
+    font-weight:700;
+    padding:11px;
+    border-radius:12px;
+    cursor:pointer;
+    backdrop-filter:blur(6px);
+    transition:background .15s ease;
+  }
+  .tpl-edit-btn:hover{background:rgba(255,255,255,0.28);}
+
+  /* ---------- template editor ---------- */
+  .tpl-editor{display:none;}
+  .tpl-editor.active{display:block;}
+  .tpl-back-btn{margin-bottom:18px;border-radius:12px;padding:9px 16px;font-size:13px;}
+  .tpl-editor-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:24px;
+    align-items:start;
+  }
+  @media (max-width:900px){ .tpl-editor-grid{grid-template-columns:1fr;} }
+  .tpl-canvas-wrap{
+    background:var(--surface);
+    border-radius:24px;
+    padding:20px;
+    box-shadow:var(--shadow-md);
+  }
+  .tpl-canvas-wrap canvas{
+    width:100%;
+    max-width:420px;
+    height:auto;
+    display:block;
+    margin:0 auto;
+    border-radius:16px;
+    box-shadow:var(--shadow-lg);
+  }
+  .tpl-controls{display:flex;flex-direction:column;gap:16px;}
+  .tpl-download-btn{width:100%;padding:15px;border-radius:16px;font-size:14px;}
+  .tpl-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:4px;}
+  .tpl-card-head .card-title{margin:0;}
+  .tpl-card-head .pill-btn{padding:6px 12px;font-size:11px;flex-shrink:0;}
+  .toggle-row{
+    display:flex;align-items:center;gap:10px;
+    font-size:13px;font-weight:600;color:var(--text-dim);
+    cursor:pointer;
+  }
+  .toggle-row input[type="checkbox"]{
+    width:18px;height:18px;flex-shrink:0;accent-color:var(--accent);cursor:pointer;
+  }
+  .accent-swatch{padding:12px;}
+  .accent-dot{width:26px;height:26px;border-radius:50%;display:block;box-shadow:0 0 0 1px var(--border), 0 0 0 3px transparent;}
+  .accent-swatch.active .accent-dot{box-shadow:0 0 0 1px var(--border), 0 0 0 3px var(--accent-soft), 0 0 0 5px var(--accent);}
+
+  .seo-content{
+    margin-top:64px;
+    padding-top:48px;
+    border-top:1px solid var(--border);
+  }
+  .seo-content h2{
+    font-size:24px;
+    font-weight:800;
+    letter-spacing:-0.01em;
+    margin:0 0 12px;
+    color:var(--text);
+  }
+  .seo-content > p{
+    color:var(--text-dim);
+    font-size:15px;
+    line-height:1.65;
+    max-width:720px;
+    margin:0 0 36px;
+  }
+  .seo-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:18px;
+    margin-bottom:48px;
+  }
+  @media (max-width:900px){
+    .seo-grid{grid-template-columns:repeat(2,1fr);}
+  }
+  @media (max-width:520px){
+    .seo-grid{grid-template-columns:1fr;}
+  }
+  .seo-item{
+    background:var(--surface);
+    border-radius:18px;
+    padding:20px;
+    box-shadow:var(--shadow-sm);
+  }
+  .seo-item h3{
+    font-size:14px;
+    font-weight:700;
+    margin:0 0 6px;
+    color:var(--text);
+  }
+  .seo-item p{
+    font-size:13px;
+    color:var(--text-dim);
+    line-height:1.5;
+    margin:0;
+  }
+  .faq{display:flex;flex-direction:column;gap:14px;}
+  .faq-item{
+    background:var(--surface);
+    border-radius:18px;
+    padding:20px 24px;
+    box-shadow:var(--shadow-sm);
+  }
+  .faq-item h3{
+    font-size:15px;
+    font-weight:700;
+    margin:0 0 6px;
+    color:var(--text);
+  }
+  .faq-item p{
+    font-size:14px;
+    color:var(--text-dim);
+    line-height:1.55;
+    margin:0;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Generador de códigos QR</div>
+    <h1>GeneraQR</h1>
+    <p>Crea códigos QR personalizados gratis: cambia colores, degradados, formas de esquina y añade tu logo. Todo se genera al instante en tu navegador, sin registrarte y sin marcas de agua.</p>
+  </header>
+
+  <div class="mode-toggle" id="mode-toggle">
+    <button type="button" class="mode-btn active" data-mode="designer">Diseñador QR</button>
+    <button type="button" class="mode-btn" data-mode="templates">Plantillas creativas</button>
+  </div>
+
+  <div class="mode-panel active" data-mode-panel="designer">
+  <div class="grid">
+
+    <div class="stack">
+
+      <div class="tabs" id="option-tabs">
+        <button type="button" class="tab-btn active" data-tab="content"><span class="tab-num">1</span><span class="tab-label">Contenido</span></button>
+        <button type="button" class="tab-btn" data-tab="style"><span class="tab-num">2</span><span class="tab-label">Estilo</span></button>
+        <button type="button" class="tab-btn" data-tab="logo"><span class="tab-num">3</span><span class="tab-label">Logo</span></button>
+        <button type="button" class="tab-btn" data-tab="download"><span class="tab-num">4</span><span class="tab-label">Descargar</span></button>
+      </div>
+
+      <div class="tab-panel active" data-panel="content">
+      <div class="card">
+        <div class="field" style="margin-bottom:0;">
+          <label class="field-label" for="url-input">Enlace o texto</label>
+          <input type="text" id="url-input" placeholder="https://tusitio.com" value="generaqr.xyz">
+        </div>
+      </div>
+      </div>
+
+      <div class="tab-panel" data-panel="style">
+      <div class="card">
+        <p class="card-title">Patrón y esquinas</p>
+        <p class="card-subtitle">Elige cómo se ven los puntos de datos y las tres marcas de esquina.</p>
+
+        <div class="field">
+          <label class="field-label">Puntos de datos</label>
+          <div class="swatch-grid" id="dots-type-group"></div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Marco de esquina</label>
+          <div class="swatch-grid cols-2" id="csquare-type-group"></div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Punto de esquina</label>
+          <div class="swatch-grid cols-2" id="cdot-type-group"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <p class="card-title">Colores</p>
+        <p class="card-subtitle">Sólidos o en degradado — cada elemento por separado.</p>
+
+        <div class="color-group" id="group-dots">
+          <div class="color-group-head">
+            <label class="field-label">Puntos de datos</label>
+            <div class="segmented" data-mode-group="dots">
+              <button type="button" class="active" data-mode="solid">Sólido</button>
+              <button type="button" data-mode="gradient">Degradado</button>
+            </div>
+          </div>
+          <div class="color-row" data-solid-row="dots">
+            <div class="swatch-input">
+              <input type="color" data-color1="dots" value="#1D1D1F">
+              <span class="hex-val" data-hex1="dots">#1D1D1F</span>
+            </div>
+          </div>
+          <div class="gradient-row" data-gradient-row="dots">
+            <div class="color-row">
+              <div class="swatch-input">
+                <input type="color" data-color1="dots" value="#0A84FF">
+                <span class="hex-val" data-hex1="dots">#0A84FF</span>
+              </div>
+              <div class="swatch-input">
+                <input type="color" data-color2="dots" value="#FF375F">
+                <span class="hex-val" data-hex2="dots">#FF375F</span>
+              </div>
+            </div>
+            <div class="segmented" data-gradtype-group="dots">
+              <button type="button" class="active" data-gradtype="linear">Lineal</button>
+              <button type="button" data-gradtype="radial">Radial</button>
+            </div>
+            <div class="gradient-angle show" data-angle-wrap="dots">
+              <input type="range" min="0" max="360" value="45" data-angle="dots">
+              <div class="range-label"><span>Ángulo</span><span data-angle-val="dots">45°</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="color-group" id="group-csquare">
+          <div class="color-group-head">
+            <label class="field-label">Marco de esquina</label>
+            <div class="segmented" data-mode-group="csquare">
+              <button type="button" class="active" data-mode="solid">Sólido</button>
+              <button type="button" data-mode="gradient">Degradado</button>
+            </div>
+          </div>
+          <div class="color-row" data-solid-row="csquare">
+            <div class="swatch-input">
+              <input type="color" data-color1="csquare" value="#1D1D1F">
+              <span class="hex-val" data-hex1="csquare">#1D1D1F</span>
+            </div>
+          </div>
+          <div class="gradient-row" data-gradient-row="csquare">
+            <div class="color-row">
+              <div class="swatch-input">
+                <input type="color" data-color1="csquare" value="#0A84FF">
+                <span class="hex-val" data-hex1="csquare">#0A84FF</span>
+              </div>
+              <div class="swatch-input">
+                <input type="color" data-color2="csquare" value="#FF375F">
+                <span class="hex-val" data-hex2="csquare">#FF375F</span>
+              </div>
+            </div>
+            <div class="segmented" data-gradtype-group="csquare">
+              <button type="button" class="active" data-gradtype="linear">Lineal</button>
+              <button type="button" data-gradtype="radial">Radial</button>
+            </div>
+            <div class="gradient-angle show" data-angle-wrap="csquare">
+              <input type="range" min="0" max="360" value="45" data-angle="csquare">
+              <div class="range-label"><span>Ángulo</span><span data-angle-val="csquare">45°</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="color-group" id="group-cdot">
+          <div class="color-group-head">
+            <label class="field-label">Punto de esquina</label>
+            <div class="segmented" data-mode-group="cdot">
+              <button type="button" class="active" data-mode="solid">Sólido</button>
+              <button type="button" data-mode="gradient">Degradado</button>
+            </div>
+          </div>
+          <div class="color-row" data-solid-row="cdot">
+            <div class="swatch-input">
+              <input type="color" data-color1="cdot" value="#1D1D1F">
+              <span class="hex-val" data-hex1="cdot">#1D1D1F</span>
+            </div>
+          </div>
+          <div class="gradient-row" data-gradient-row="cdot">
+            <div class="color-row">
+              <div class="swatch-input">
+                <input type="color" data-color1="cdot" value="#0A84FF">
+                <span class="hex-val" data-hex1="cdot">#0A84FF</span>
+              </div>
+              <div class="swatch-input">
+                <input type="color" data-color2="cdot" value="#FF375F">
+                <span class="hex-val" data-hex2="cdot">#FF375F</span>
+              </div>
+            </div>
+            <div class="segmented" data-gradtype-group="cdot">
+              <button type="button" class="active" data-gradtype="linear">Lineal</button>
+              <button type="button" data-gradtype="radial">Radial</button>
+            </div>
+            <div class="gradient-angle show" data-angle-wrap="cdot">
+              <input type="range" min="0" max="360" value="45" data-angle="cdot">
+              <div class="range-label"><span>Ángulo</span><span data-angle-val="cdot">45°</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="color-group">
+          <div class="color-group-head">
+            <label class="field-label">Fondo</label>
+          </div>
+          <div class="color-row">
+            <div class="swatch-input">
+              <input type="color" id="bg-color" value="#FFFFFF">
+              <span class="hex-val" id="bg-hex">#FFFFFF</span>
+            </div>
+          </div>
+          <div class="contrast-warning" id="contrast-warning">⚠ Poco contraste — puede fallar al escanear</div>
+        </div>
+      </div>
+      </div>
+
+      <div class="tab-panel" data-panel="logo">
+      <div class="card">
+        <p class="card-title">Logo</p>
+        <p class="card-subtitle">Opcional. Puedes recortar y acercar la imagen antes de usarla.</p>
+
+        <div class="upload-box" id="upload-box">
+          <input type="file" id="logo-input" accept="image/*">
+          <div class="upload-txt"><strong>Toca para subir una imagen</strong></div>
+        </div>
+
+        <div class="crop-section" id="crop-section">
+          <div class="crop-stage">
+            <canvas id="crop-canvas" width="320" height="320"></canvas>
+          </div>
+          <div class="crop-controls">
+            <label class="field-label">Acercar</label>
+            <input type="range" id="crop-zoom" min="100" max="300" value="100">
+          </div>
+          <div class="crop-actions">
+            <button type="button" class="ghost" id="crop-cancel">Cancelar</button>
+            <button type="button" class="primary" id="crop-confirm">Usar esta imagen</button>
+          </div>
+        </div>
+
+        <div class="logo-preview" id="logo-preview">
+          <img id="logo-preview-img" src="" alt="logo">
+          <span id="logo-preview-name">Logo</span>
+          <button type="button" class="pill-btn" id="logo-edit">Recortar</button>
+          <button type="button" class="pill-btn danger" id="logo-remove">Quitar</button>
+        </div>
+
+        <div class="field" id="logo-color-field" style="display:none;margin-top:16px;">
+          <label class="field-label">Color del QR desde la imagen</label>
+          <canvas id="logo-color-canvas" width="240" height="240"></canvas>
+          <div class="eyedrop-hint">💧 Toca la imagen para usar ese color en los puntos</div>
+        </div>
+
+        <div class="field" id="logo-size-field" style="display:none;">
+          <label class="field-label">Tamaño del logo</label>
+          <input type="range" id="logo-size" min="8" max="22" value="15">
+          <div class="range-label"><span>Discreto</span><span id="logo-size-val">15%</span><span>Máximo seguro</span></div>
+          <div class="contrast-warning" id="logo-size-warning">⚠ A este tamaño el QR puede fallar al escanear — pruébalo antes de usarlo</div>
+        </div>
+
+        <div class="field" id="logo-padding-field" style="display:none;">
+          <label class="field-label">Espacio del fondo alrededor del logo</label>
+          <input type="range" id="logo-padding" min="10" max="60" value="25">
+          <div class="range-label"><span>Logo ajustado</span><span id="logo-padding-val">25%</span><span>Logo pequeño</span></div>
+        </div>
+
+        <div class="field" id="logo-bg-field" style="display:none;">
+          <label class="field-label">Forma del fondo del logo</label>
+          <div class="swatch-grid cols-2" id="logo-bg-group"></div>
+        </div>
+      </div>
+      </div>
+
+      <div class="tab-panel" data-panel="download">
+      <div class="card">
+        <p class="card-title">Descarga</p>
+        <div class="field" style="margin-bottom:0;">
+          <label class="field-label">Resolución</label>
+          <div class="segmented" id="size-group" style="width:100%;justify-content:center;display:flex;">
+            <button type="button" class="active" data-size="512" style="flex:1;">512px</button>
+            <button type="button" data-size="1024" style="flex:1;">1024px</button>
+            <button type="button" data-size="2048" style="flex:1;">2048px</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <p class="card-title">Guardar diseño</p>
+        <p class="card-subtitle">Guarda esta combinación de colores y formas para reutilizarla después. Se guarda en este navegador.</p>
+        <div class="field">
+          <div class="preset-save-row">
+            <input type="text" id="preset-name-input" placeholder="Nombre del diseño (ej. Mi negocio)" maxlength="40">
+            <button type="button" class="primary" id="preset-save-btn">Guardar</button>
+          </div>
+        </div>
+        <div class="preset-list" id="preset-list"></div>
+        <p class="preset-empty" id="preset-empty">Aún no tienes diseños guardados.</p>
+      </div>
+      </div>
+
+    </div>
+
+    <div class="preview-panel">
+      <div class="preview-card">
+        <div class="qr-stage">
+          <div id="qr-canvas-holder"></div>
+          <div class="empty-state" id="empty-state">Esperando enlace…</div>
+        </div>
+        <div class="actions">
+          <button class="ghost" id="regenerate-btn">Regenerar</button>
+          <button class="primary" id="download-btn" disabled>Descargar PNG</button>
+        </div>
+        <div class="meta-row">
+          <span id="meta-size">—</span>
+          <span id="meta-correction">Corrección: H</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  </div>
+
+  <div class="mode-panel" data-mode-panel="templates">
+
+    <div class="tpl-gallery active" id="tpl-gallery">
+      <div class="tpl-gallery-head">
+        <h2>Plantillas listas para cada ocasión</h2>
+        <p>Diseños con tipografía y colores propios para negocios, eventos, redes sociales, WiFi y más. Edita el texto, elige un acento y descarga tu QR con diseño incluido.</p>
+      </div>
+      <div class="tpl-grid" id="tpl-grid"></div>
+    </div>
+
+    <div class="tpl-editor" id="tpl-editor">
+      <button type="button" class="ghost tpl-back-btn" id="tpl-back-btn">← Volver a plantillas</button>
+      <div class="tpl-editor-grid">
+        <div class="tpl-canvas-wrap">
+          <canvas id="tpl-canvas" width="900" height="1200"></canvas>
+        </div>
+        <div class="tpl-controls">
+
+          <div class="card">
+            <div class="tpl-card-head">
+              <p class="card-title" id="tpl-editor-title">Plantilla</p>
+              <button type="button" class="pill-btn" id="tpl-reset-btn">Restablecer</button>
+            </div>
+            <p class="card-subtitle">Edita el texto, la tipografía y los colores. El diseño se actualiza al instante.</p>
+
+            <div class="field">
+              <label class="field-label">Título</label>
+              <input type="text" id="tpl-title-input" maxlength="40">
+            </div>
+            <div class="field">
+              <label class="field-label">Fuente del título</label>
+              <select id="tpl-title-font"></select>
+            </div>
+
+            <div class="field">
+              <label class="field-label">Subtítulo</label>
+              <input type="text" id="tpl-subtitle-input" maxlength="70">
+            </div>
+            <div class="field">
+              <label class="field-label">Fuente del subtítulo</label>
+              <select id="tpl-subtitle-font"></select>
+            </div>
+
+            <div class="field" style="margin-bottom:0;">
+              <label class="field-label">Enlace o texto del QR</label>
+              <input type="text" id="tpl-qr-input" placeholder="generaqr.xyz">
+            </div>
+          </div>
+
+          <div class="card">
+            <p class="card-title">Colores</p>
+            <p class="card-subtitle">Elige cualquier color para cada elemento del diseño.</p>
+
+            <div class="field">
+              <label class="field-label">Fondo</label>
+              <div class="swatch-input">
+                <input type="color" id="tpl-bg-color">
+                <span class="hex-val" id="tpl-bg-hex">—</span>
+              </div>
+            </div>
+            <div class="field">
+              <label class="field-label">Título</label>
+              <div class="swatch-input">
+                <input type="color" id="tpl-title-color">
+                <span class="hex-val" id="tpl-title-color-hex">—</span>
+              </div>
+            </div>
+            <div class="field">
+              <label class="field-label">Subtítulo</label>
+              <div class="swatch-input">
+                <input type="color" id="tpl-subtitle-color">
+                <span class="hex-val" id="tpl-subtitle-color-hex">—</span>
+              </div>
+            </div>
+            <div class="field" style="margin-bottom:14px;">
+              <label class="field-label">Acento del QR</label>
+              <div class="color-row">
+                <div class="swatch-input">
+                  <input type="color" id="tpl-accent-color">
+                  <span class="hex-val" id="tpl-accent-hex">—</span>
+                </div>
+                <div class="swatch-grid" id="tpl-accent-group" style="flex:1;"></div>
+              </div>
+            </div>
+
+            <label class="toggle-row" style="margin-bottom:0;">
+              <input type="checkbox" id="tpl-use-main-style">
+              <span>Usar el mismo diseño de puntos y esquinas del Diseñador</span>
+            </label>
+          </div>
+
+          <button type="button" class="primary tpl-download-btn" id="tpl-download-btn" disabled>Descargar diseño en PNG</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <section class="seo-content">
+    <h2>Generador de códigos QR gratis, rápido y sin registro</h2>
+    <p>GeneraQR te permite crear códigos QR personalizados para enlaces, menús, tarjetas de presentación, redes sociales o cualquier texto. Ajusta colores sólidos o degradados, elige la forma de los puntos y las esquinas, e inserta tu logo con recorte incluido. Todo el proceso ocurre localmente en tu navegador: tu enlace nunca se envía a un servidor.</p>
+
+    <div class="seo-grid">
+      <div class="seo-item">
+        <h3>100% gratuito</h3>
+        <p>Genera todos los códigos QR que necesites, sin límites de uso ni marcas de agua en la descarga.</p>
+      </div>
+      <div class="seo-item">
+        <h3>Personalización completa</h3>
+        <p>Colores, degradados, formas de esquina y tu propio logo, con vista previa instantánea en cada ajuste.</p>
+      </div>
+      <div class="seo-item">
+        <h3>Privado por diseño</h3>
+        <p>El código QR se genera directamente en tu navegador. No almacenamos ni transmitimos tus enlaces.</p>
+      </div>
+      <div class="seo-item">
+        <h3>Alta resolución</h3>
+        <p>Descarga en PNG hasta 2048×2048px, listo para imprimir en cualquier tamaño.</p>
+      </div>
+    </div>
+
+    <h2>Preguntas frecuentes</h2>
+    <div class="faq">
+      <div class="faq-item">
+        <h3>¿GeneraQR es realmente gratis?</h3>
+        <p>Sí, generar y descargar códigos QR en GeneraQR es completamente gratuito, sin registro ni límite de descargas.</p>
+      </div>
+      <div class="faq-item">
+        <h3>¿Los códigos QR caducan?</h3>
+        <p>No. Como el contenido se codifica directamente dentro del QR, el código funciona de forma permanente mientras el enlace o texto siga siendo válido.</p>
+      </div>
+      <div class="faq-item">
+        <h3>¿Puedo agregar mi logo sin que el QR deje de funcionar?</h3>
+        <p>Sí. GeneraQR usa corrección de errores alta y te avisa si el tamaño del logo es demasiado grande para garantizar que el código siga siendo escaneable.</p>
+      </div>
+      <div class="faq-item">
+        <h3>¿En qué formato puedo descargar mi código QR?</h3>
+        <p>Puedes descargar tu código QR en PNG en tres resoluciones: 512px, 1024px o 2048px, según el uso que le vayas a dar.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>GeneraQR · generado localmente, tu enlace no se envía a ningún servidor</footer>
+</div>
+
+<script>
+  /* ---------- tabs ---------- */
+  const tabBtns = document.querySelectorAll('#option-tabs .tab-btn');
+  const tabPanels = document.querySelectorAll('.tab-panel');
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabBtns.forEach(b => b.classList.remove('active'));
+      tabPanels.forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelector(`.tab-panel[data-panel="${btn.dataset.tab}"]`).classList.add('active');
+    });
+  });
+
+  /* ---------- mode toggle ---------- */
+  document.querySelectorAll('#mode-toggle .mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#mode-toggle .mode-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.mode-panel').forEach(p => p.classList.remove('active'));
+      document.querySelector(`.mode-panel[data-mode-panel="${btn.dataset.mode}"]`).classList.add('active');
+    });
+  });
+
+  /* ---------- element refs ---------- */
+  const urlInput = document.getElementById('url-input');
+  const bgColorInput = document.getElementById('bg-color');
+  const bgHex = document.getElementById('bg-hex');
+  const contrastWarning = document.getElementById('contrast-warning');
+
+  const uploadBox = document.getElementById('upload-box');
+  const logoInput = document.getElementById('logo-input');
+  const logoPreview = document.getElementById('logo-preview');
+  const logoPreviewImg = document.getElementById('logo-preview-img');
+  const logoEditBtn = document.getElementById('logo-edit');
+  const logoRemoveBtn = document.getElementById('logo-remove');
+
+  const cropSection = document.getElementById('crop-section');
+  const cropCanvas = document.getElementById('crop-canvas');
+  const cropZoomSlider = document.getElementById('crop-zoom');
+  const cropConfirmBtn = document.getElementById('crop-confirm');
+  const cropCancelBtn = document.getElementById('crop-cancel');
+
+  const logoColorField = document.getElementById('logo-color-field');
+  const logoColorCanvas = document.getElementById('logo-color-canvas');
+  const logoSizeField = document.getElementById('logo-size-field');
+  const logoSize = document.getElementById('logo-size');
+  const logoSizeVal = document.getElementById('logo-size-val');
+  const logoSizeWarning = document.getElementById('logo-size-warning');
+  const logoPaddingField = document.getElementById('logo-padding-field');
+  const logoPadding = document.getElementById('logo-padding');
+  const logoPaddingVal = document.getElementById('logo-padding-val');
+  const logoBgField = document.getElementById('logo-bg-field');
+  const logoBgGroup = document.getElementById('logo-bg-group');
+
+  const sizeGroup = document.getElementById('size-group');
+  const qrHolder = document.getElementById('qr-canvas-holder');
+  const emptyState = document.getElementById('empty-state');
+  const downloadBtn = document.getElementById('download-btn');
+  const regenerateBtn = document.getElementById('regenerate-btn');
+  const metaSize = document.getElementById('meta-size');
+
+  const presetNameInput = document.getElementById('preset-name-input');
+  const presetSaveBtn = document.getElementById('preset-save-btn');
+  const presetListEl = document.getElementById('preset-list');
+  const presetEmpty = document.getElementById('preset-empty');
+
+  const tplGrid = document.getElementById('tpl-grid');
+  const tplGallery = document.getElementById('tpl-gallery');
+  const tplEditor = document.getElementById('tpl-editor');
+  const tplBackBtn = document.getElementById('tpl-back-btn');
+  const tplResetBtn = document.getElementById('tpl-reset-btn');
+  const tplCanvas = document.getElementById('tpl-canvas');
+  const tplEditorTitle = document.getElementById('tpl-editor-title');
+  const tplTitleInput = document.getElementById('tpl-title-input');
+  const tplSubtitleInput = document.getElementById('tpl-subtitle-input');
+  const tplQrInput = document.getElementById('tpl-qr-input');
+  const tplTitleFontSelect = document.getElementById('tpl-title-font');
+  const tplSubtitleFontSelect = document.getElementById('tpl-subtitle-font');
+  const tplBgColor = document.getElementById('tpl-bg-color');
+  const tplBgHex = document.getElementById('tpl-bg-hex');
+  const tplTitleColor = document.getElementById('tpl-title-color');
+  const tplTitleColorHex = document.getElementById('tpl-title-color-hex');
+  const tplSubtitleColor = document.getElementById('tpl-subtitle-color');
+  const tplSubtitleColorHex = document.getElementById('tpl-subtitle-color-hex');
+  const tplAccentColor = document.getElementById('tpl-accent-color');
+  const tplAccentHex = document.getElementById('tpl-accent-hex');
+  const tplAccentGroup = document.getElementById('tpl-accent-group');
+  const tplUseMainStyle = document.getElementById('tpl-use-main-style');
+  const tplDownloadBtn = document.getElementById('tpl-download-btn');
+
+  /* ---------- state ---------- */
+  let logoImage = null;      // final cropped image used on the QR
+  let originalImage = null;  // raw uploaded image, kept for re-cropping
+  let finalCanvas = null;
+  let debounceTimer = null;
+  let targetSize = 1024;
+  let logoBgShape = 'rounded';
+
+  const dotsTypes = [
+    {value:'square', label:'Cuadrado', shape:'shape-square'},
+    {value:'dots', label:'Puntos', shape:'shape-dots'},
+    {value:'rounded', label:'Redondeado', shape:'shape-rounded'},
+    {value:'extra-rounded', label:'Extra redondeado', shape:'shape-extra-rounded'},
+    {value:'classy', label:'Clásico', shape:'shape-classy'},
+    {value:'classy-rounded', label:'Clásico redondeado', shape:'shape-classy-rounded'}
+  ];
+  const cornerSquareTypes = [
+    {value:'square', label:'Cuadrado', frame:'frame-square'},
+    {value:'extra-rounded', label:'Redondeado', frame:'frame-extra-rounded'},
+    {value:'dot', label:'Círculo', frame:'frame-dot'}
+  ];
+  const cornerDotTypes = [
+    {value:'square', label:'Cuadrado', dot:'dot-square'},
+    {value:'dot', label:'Círculo', dot:'dot-dot'}
+  ];
+  const logoBgShapes = [
+    {value:'rounded', label:'Redondeado'},
+    {value:'circle', label:'Círculo'},
+    {value:'square', label:'Cuadrado'},
+    {value:'none', label:'Sin fondo'}
+  ];
+
+  let selectedDotsType = 'rounded';
+  let selectedCSquareType = 'extra-rounded';
+  let selectedCDotType = 'dot';
+
+  const colorState = {
+    dots:    { mode:'solid', color1:'#1D1D1F', color2:'#FF375F', gradType:'linear', angle:45 },
+    csquare: { mode:'solid', color1:'#1D1D1F', color2:'#FF375F', gradType:'linear', angle:45 },
+    cdot:    { mode:'solid', color1:'#1D1D1F', color2:'#FF375F', gradType:'linear', angle:45 }
+  };
+
+  /* ---------- build swatch grids ---------- */
+  function buildTypeGrid(container, items, iconBuilder, onSelect, defaultValue){
+    items.forEach(item => {
+      const el = document.createElement('div');
+      el.className = 'swatch' + (item.value === defaultValue ? ' active' : '');
+      el.dataset.value = item.value;
+      el.innerHTML = iconBuilder(item) + '<span>' + item.label + '</span>';
+      el.addEventListener('click', () => {
+        container.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+        el.classList.add('active');
+        onSelect(item.value);
+        scheduleGenerate();
+      });
+      container.appendChild(el);
+    });
+  }
+
+  buildTypeGrid(
+    document.getElementById('dots-type-group'), dotsTypes,
+    (item) => `<div class="pattern-icon ${item.shape}"><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div></div>`,
+    (v) => selectedDotsType = v, selectedDotsType
+  );
+  buildTypeGrid(
+    document.getElementById('csquare-type-group'), cornerSquareTypes,
+    (item) => `<div class="corner-icon"><div class="frame ${item.frame}"></div><div class="dot dot-square"></div></div>`,
+    (v) => selectedCSquareType = v, selectedCSquareType
+  );
+  buildTypeGrid(
+    document.getElementById('cdot-type-group'), cornerDotTypes,
+    (item) => `<div class="corner-icon"><div class="frame frame-square"></div><div class="dot ${item.dot}"></div></div>`,
+    (v) => selectedCDotType = v, selectedCDotType
+  );
+  buildTypeGrid(
+    document.getElementById('logo-bg-group'), logoBgShapes,
+    (item) => `<div class="corner-icon"><div class="frame frame-square" style="border-width:0;background:currentColor;opacity:0.18;border-radius:${item.value==='circle'?'50%':item.value==='square'?'2px':item.value==='none'?'0':'30%'};"></div></div>`,
+    (v) => { logoBgShape = v; checkLogoSafety(); }, logoBgShape
+  );
+
+  /* ---------- generic color group wiring ---------- */
+  function wireColorGroup(prefix){
+    const modeButtons = document.querySelectorAll(`[data-mode-group="${prefix}"] button`);
+    modeButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        modeButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        colorState[prefix].mode = btn.dataset.mode;
+        document.querySelector(`[data-solid-row="${prefix}"]`).style.display = colorState[prefix].mode === 'solid' ? 'flex' : 'none';
+        document.querySelector(`[data-gradient-row="${prefix}"]`).classList.toggle('show', colorState[prefix].mode === 'gradient');
+        checkContrast();
+        scheduleGenerate();
+      });
+    });
+
+    document.querySelectorAll(`[data-color1="${prefix}"]`).forEach(input => {
+      input.addEventListener('input', () => {
+        colorState[prefix].color1 = input.value;
+        document.querySelectorAll(`[data-hex1="${prefix}"]`).forEach(h => h.textContent = input.value.toUpperCase());
+        // keep both solid + gradient color1 pickers in sync visually
+        document.querySelectorAll(`[data-color1="${prefix}"]`).forEach(i => { if(i!==input) i.value = input.value; });
+        checkContrast();
+        scheduleGenerate();
+      });
+    });
+    document.querySelectorAll(`[data-color2="${prefix}"]`).forEach(input => {
+      input.addEventListener('input', () => {
+        colorState[prefix].color2 = input.value;
+        document.querySelectorAll(`[data-hex2="${prefix}"]`).forEach(h => h.textContent = input.value.toUpperCase());
+        scheduleGenerate();
+      });
+    });
+
+    const gradTypeButtons = document.querySelectorAll(`[data-gradtype-group="${prefix}"] button`);
+    gradTypeButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        gradTypeButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        colorState[prefix].gradType = btn.dataset.gradtype;
+        document.querySelector(`[data-angle-wrap="${prefix}"]`).classList.toggle('show', colorState[prefix].gradType === 'linear');
+        scheduleGenerate();
+      });
+    });
+
+    const angleInput = document.querySelector(`[data-angle="${prefix}"]`);
+    angleInput.addEventListener('input', () => {
+      colorState[prefix].angle = parseInt(angleInput.value, 10);
+      document.querySelector(`[data-angle-val="${prefix}"]`).textContent = angleInput.value + '°';
+      scheduleGenerate();
+    });
+  }
+  ['dots','csquare','cdot'].forEach(wireColorGroup);
+
+  function getColorOption(prefix){
+    const s = colorState[prefix];
+    if(s.mode === 'solid'){
+      return { color: s.color1 };
+    }
+    return {
+      gradient: {
+        type: s.gradType,
+        rotation: (s.angle * Math.PI) / 180,
+        colorStops: [
+          { offset: 0, color: s.color1 },
+          { offset: 1, color: s.color2 }
+        ]
+      }
+    };
+  }
+
+  /* ---------- background + contrast ---------- */
+  bgColorInput.addEventListener('input', () => {
+    bgHex.textContent = bgColorInput.value.toUpperCase();
+    checkContrast();
+    scheduleGenerate();
+  });
+
+  function luminance(hex){
+    const c = hex.substring(1);
+    const r = parseInt(c.substring(0,2),16)/255;
+    const g = parseInt(c.substring(2,4),16)/255;
+    const b = parseInt(c.substring(4,6),16)/255;
+    const a = [r,g,b].map(v => v <= 0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055, 2.4));
+    return 0.2126*a[0] + 0.7152*a[1] + 0.0722*a[2];
+  }
+  function contrastRatio(hex1, hex2){
+    const l1 = luminance(hex1) + 0.05;
+    const l2 = luminance(hex2) + 0.05;
+    return l1 > l2 ? l1/l2 : l2/l1;
+  }
+  function checkContrast(){
+    const dotColor = colorState.dots.color1;
+    const ratio = contrastRatio(dotColor, bgColorInput.value);
+    contrastWarning.classList.toggle('show', ratio < 2.5);
+  }
+
+  /* ---------- resolution pills ---------- */
+  sizeGroup.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      sizeGroup.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      targetSize = parseInt(btn.dataset.size, 10);
+      generate(true);
+    });
+  });
+
+  /* ---------- logo upload + crop ---------- */
+  const CROP_SIZE = 320;
+  let cropZoom = 1, cropOffsetX = 0, cropOffsetY = 0, cropBaseScale = 1;
+
+  logoInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        originalImage = img;
+        openCropper();
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  function openCropper(){
+    cropZoom = 1;
+    cropZoomSlider.value = 100;
+    cropBaseScale = Math.max(CROP_SIZE / originalImage.width, CROP_SIZE / originalImage.height);
+    centerCrop();
+    drawCrop();
+    cropSection.classList.add('show');
+    uploadBox.style.display = 'none';
+    logoPreview.classList.remove('show');
+  }
+
+  function currentDrawSize(){
+    const totalScale = cropBaseScale * cropZoom;
+    return { w: originalImage.width * totalScale, h: originalImage.height * totalScale };
+  }
+  function centerCrop(){
+    const { w, h } = currentDrawSize();
+    cropOffsetX = (CROP_SIZE - w) / 2;
+    cropOffsetY = (CROP_SIZE - h) / 2;
+  }
+  function clampCropOffsets(){
+    const { w, h } = currentDrawSize();
+    const minX = CROP_SIZE - w, minY = CROP_SIZE - h;
+    cropOffsetX = Math.min(0, Math.max(minX, cropOffsetX));
+    cropOffsetY = Math.min(0, Math.max(minY, cropOffsetY));
+  }
+  function drawCrop(){
+    const ctx = cropCanvas.getContext('2d');
+    ctx.clearRect(0, 0, CROP_SIZE, CROP_SIZE);
+    const { w, h } = currentDrawSize();
+    ctx.drawImage(originalImage, cropOffsetX, cropOffsetY, w, h);
+  }
+
+  cropZoomSlider.addEventListener('input', () => {
+    cropZoom = parseInt(cropZoomSlider.value, 10) / 100;
+    clampCropOffsets();
+    drawCrop();
+  });
+
+  let cropDragging = false, cropLastX = 0, cropLastY = 0;
+  cropCanvas.addEventListener('pointerdown', (e) => {
+    cropDragging = true; cropLastX = e.clientX; cropLastY = e.clientY;
+    cropCanvas.setPointerCapture(e.pointerId);
+  });
+  cropCanvas.addEventListener('pointermove', (e) => {
+    if(!cropDragging) return;
+    const rect = cropCanvas.getBoundingClientRect();
+    const scaleFactor = CROP_SIZE / rect.width;
+    cropOffsetX += (e.clientX - cropLastX) * scaleFactor;
+    cropOffsetY += (e.clientY - cropLastY) * scaleFactor;
+    clampCropOffsets();
+    drawCrop();
+    cropLastX = e.clientX; cropLastY = e.clientY;
+  });
+  window.addEventListener('pointerup', () => { cropDragging = false; });
+
+  cropCancelBtn.addEventListener('click', () => {
+    cropSection.classList.remove('show');
+    if(logoImage){
+      logoPreview.classList.add('show');
+    } else {
+      uploadBox.style.display = 'block';
+    }
+  });
+
+  cropConfirmBtn.addEventListener('click', () => {
+    const OUTPUT = 512;
+    const ratio = OUTPUT / CROP_SIZE;
+    const { w, h } = currentDrawSize();
+    const outCanvas = document.createElement('canvas');
+    outCanvas.width = OUTPUT; outCanvas.height = OUTPUT;
+    const octx = outCanvas.getContext('2d');
+    octx.drawImage(originalImage, cropOffsetX * ratio, cropOffsetY * ratio, w * ratio, h * ratio);
+
+    const finalImg = new Image();
+    finalImg.onload = () => {
+      logoImage = finalImg;
+      logoPreviewImg.src = outCanvas.toDataURL();
+      logoPreview.classList.add('show');
+      cropSection.classList.remove('show');
+      logoSizeField.style.display = 'block';
+      logoPaddingField.style.display = 'block';
+      logoBgField.style.display = 'block';
+      logoColorField.style.display = 'block';
+      drawLogoOnColorCanvas(finalImg);
+      checkLogoSafety();
+      scheduleGenerate();
+    };
+    finalImg.src = outCanvas.toDataURL();
+  });
+
+  logoEditBtn.addEventListener('click', () => {
+    if(!originalImage) return;
+    logoPreview.classList.remove('show');
+    cropBaseScale = Math.max(CROP_SIZE / originalImage.width, CROP_SIZE / originalImage.height);
+    clampCropOffsets();
+    drawCrop();
+    cropSection.classList.add('show');
+  });
+
+  logoRemoveBtn.addEventListener('click', () => {
+    logoImage = null;
+    originalImage = null;
+    logoInput.value = '';
+    logoPreview.classList.remove('show');
+    cropSection.classList.remove('show');
+    uploadBox.style.display = 'block';
+    logoSizeField.style.display = 'none';
+    logoPaddingField.style.display = 'none';
+    logoBgField.style.display = 'none';
+    logoColorField.style.display = 'none';
+    logoSizeWarning.classList.remove('show');
+    scheduleGenerate();
+  });
+
+  function drawLogoOnColorCanvas(img){
+    const ctx = logoColorCanvas.getContext('2d');
+    const cw = logoColorCanvas.width, ch = logoColorCanvas.height;
+    ctx.clearRect(0,0,cw,ch);
+    const scale = Math.min(cw/img.width, ch/img.height);
+    const dw = img.width*scale, dh = img.height*scale;
+    ctx.drawImage(img, (cw-dw)/2, (ch-dh)/2, dw, dh);
+  }
+  function rgbToHex(r,g,b){ return '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join(''); }
+
+  logoColorCanvas.addEventListener('click', (e) => {
+    const ctx = logoColorCanvas.getContext('2d');
+    const rect = logoColorCanvas.getBoundingClientRect();
+    const x = Math.floor((e.clientX - rect.left) * (logoColorCanvas.width / rect.width));
+    const y = Math.floor((e.clientY - rect.top) * (logoColorCanvas.height / rect.height));
+    let pixel;
+    try{ pixel = ctx.getImageData(x, y, 1, 1).data; } catch(err){ return; }
+    if(pixel[3] === 0) return;
+    const hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
+    colorState.dots.color1 = hex;
+    document.querySelectorAll(`[data-color1="dots"]`).forEach(i => i.value = hex);
+    document.querySelectorAll(`[data-hex1="dots"]`).forEach(h => h.textContent = hex.toUpperCase());
+    checkContrast();
+    logoColorCanvas.classList.add('picked');
+    setTimeout(() => logoColorCanvas.classList.remove('picked'), 400);
+    scheduleGenerate();
+  });
+
+  function checkLogoSafety(){
+    const size = parseInt(logoSize.value, 10);
+    const pad = parseInt(logoPadding.value, 10);
+    const covered = size * (1 + pad / 100);
+    const risky = covered >= 26 || (logoBgShape === 'none' && size >= 14);
+    logoSizeWarning.classList.toggle('show', !!logoImage && risky);
+  }
+  logoSize.addEventListener('input', () => {
+    logoSizeVal.textContent = logoSize.value + '%';
+    checkLogoSafety();
+    scheduleGenerate();
+  });
+  logoPadding.addEventListener('input', () => {
+    logoPaddingVal.textContent = logoPadding.value + '%';
+    checkLogoSafety();
+    scheduleGenerate();
+  });
+
+  function roundRect(ctx, x, y, w, h, r){
+    ctx.beginPath();
+    ctx.moveTo(x+r, y);
+    ctx.arcTo(x+w, y, x+w, y+h, r);
+    ctx.arcTo(x+w, y+h, x, y+h, r);
+    ctx.arcTo(x, y+h, x, y, r);
+    ctx.arcTo(x, y, x+w, y, r);
+    ctx.closePath();
+  }
+
+  /* ---------- QR generation ---------- */
+  urlInput.addEventListener('input', scheduleGenerate);
+  regenerateBtn.addEventListener('click', () => generate(true));
+
+  function scheduleGenerate(){
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => generate(true), 350);
+  }
+
+  function generate(animate){
+    const text = urlInput.value.trim();
+    qrHolder.innerHTML = '';
+    if(!text){
+      emptyState.style.display = 'block';
+      downloadBtn.disabled = true;
+      finalCanvas = null;
+      return;
+    }
+    emptyState.style.display = 'none';
+
+    const hiddenDiv = document.createElement('div');
+    hiddenDiv.style.position = 'fixed';
+    hiddenDiv.style.left = '-9999px';
+    document.body.appendChild(hiddenDiv);
+
+    const qrObj = new QRCodeStyling({
+      width: targetSize,
+      height: targetSize,
+      type: 'canvas',
+      data: text,
+      margin: Math.round(targetSize * 0.05),
+      qrOptions: { errorCorrectionLevel: 'H' },
+      dotsOptions: Object.assign({ type: selectedDotsType }, getColorOption('dots')),
+      cornersSquareOptions: Object.assign({ type: selectedCSquareType }, getColorOption('csquare')),
+      cornersDotOptions: Object.assign({ type: selectedCDotType }, getColorOption('cdot')),
+      backgroundOptions: { color: bgColorInput.value }
+    });
+    qrObj.append(hiddenDiv);
+
+    setTimeout(() => {
+      const sourceCanvas = hiddenDiv.querySelector('canvas');
+      if(!sourceCanvas){ document.body.removeChild(hiddenDiv); return; }
+
+      const outCanvas = document.createElement('canvas');
+      outCanvas.width = targetSize;
+      outCanvas.height = targetSize;
+      const ctx = outCanvas.getContext('2d');
+      ctx.drawImage(sourceCanvas, 0, 0, targetSize, targetSize);
+
+      if(logoImage){
+        const pct = parseInt(logoSize.value, 10) / 100;
+        const logoMax = targetSize * pct;
+        let logoW, logoH;
+        if(logoImage.width >= logoImage.height){
+          logoW = logoMax; logoH = logoMax * (logoImage.height / logoImage.width);
+        } else {
+          logoH = logoMax; logoW = logoMax * (logoImage.width / logoImage.height);
+        }
+        const padPct = parseInt(logoPadding.value, 10) / 100;
+        const badgeSize = logoMax + logoMax * padPct;
+        const bx = (targetSize - badgeSize) / 2;
+        const by = (targetSize - badgeSize) / 2;
+
+        if(logoBgShape !== 'none'){
+          ctx.fillStyle = bgColorInput.value;
+          if(logoBgShape === 'circle'){
+            ctx.beginPath();
+            ctx.arc(targetSize/2, targetSize/2, badgeSize/2, 0, Math.PI*2);
+            ctx.fill();
+          } else if(logoBgShape === 'square'){
+            ctx.fillRect(bx, by, badgeSize, badgeSize);
+          } else {
+            roundRect(ctx, bx, by, badgeSize, badgeSize, badgeSize*0.22);
+            ctx.fill();
+          }
+        }
+        ctx.drawImage(logoImage, (targetSize-logoW)/2, (targetSize-logoH)/2, logoW, logoH);
+      }
+
+      finalCanvas = outCanvas;
+      qrHolder.innerHTML = '';
+      const displayCanvas = document.createElement('canvas');
+      displayCanvas.width = targetSize;
+      displayCanvas.height = targetSize;
+      displayCanvas.getContext('2d').drawImage(outCanvas, 0, 0);
+      qrHolder.appendChild(displayCanvas);
+
+      downloadBtn.disabled = false;
+      metaSize.textContent = targetSize + ' × ' + targetSize + ' px';
+
+      if(animate){
+        qrHolder.classList.remove('pop');
+        void qrHolder.offsetWidth;
+        qrHolder.classList.add('pop');
+      }
+
+      document.body.removeChild(hiddenDiv);
+    }, 120);
+  }
+
+  downloadBtn.addEventListener('click', () => {
+    if(!finalCanvas) return;
+    const link = document.createElement('a');
+    link.download = 'codigo-qr.png';
+    link.href = finalCanvas.toDataURL('image/png');
+    link.click();
+  });
+
+  /* ---------- saved design presets ---------- */
+  const PRESETS_KEY = 'generaqr_presets_v1';
+
+  function getPresets(){
+    try{ return JSON.parse(localStorage.getItem(PRESETS_KEY) || '[]'); }
+    catch(e){ return []; }
+  }
+  function setPresets(list){
+    try{ localStorage.setItem(PRESETS_KEY, JSON.stringify(list)); return true; }
+    catch(e){ return false; }
+  }
+  function escapeHtml(s){
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+  function currentStyleSnapshot(){
+    return {
+      dotsType: selectedDotsType,
+      csquareType: selectedCSquareType,
+      cdotType: selectedCDotType,
+      colorState: JSON.parse(JSON.stringify(colorState)),
+      bgColor: bgColorInput.value,
+      logoBgShape: logoBgShape,
+      logoSize: logoSize.value,
+      logoPadding: logoPadding.value,
+      targetSize: targetSize
+    };
+  }
+  function setActiveInGroup(containerId, value){
+    const container = document.getElementById(containerId);
+    container.querySelectorAll('.swatch').forEach(s => s.classList.toggle('active', s.dataset.value === value));
+  }
+  function applyColorGroupState(prefix, state){
+    colorState[prefix] = JSON.parse(JSON.stringify(state));
+    const modeButtons = document.querySelectorAll(`[data-mode-group="${prefix}"] button`);
+    modeButtons.forEach(b => b.classList.toggle('active', b.dataset.mode === state.mode));
+    document.querySelector(`[data-solid-row="${prefix}"]`).style.display = state.mode === 'solid' ? 'flex' : 'none';
+    document.querySelector(`[data-gradient-row="${prefix}"]`).classList.toggle('show', state.mode === 'gradient');
+    document.querySelectorAll(`[data-color1="${prefix}"]`).forEach(i => i.value = state.color1);
+    document.querySelectorAll(`[data-hex1="${prefix}"]`).forEach(h => h.textContent = state.color1.toUpperCase());
+    document.querySelectorAll(`[data-color2="${prefix}"]`).forEach(i => i.value = state.color2);
+    document.querySelectorAll(`[data-hex2="${prefix}"]`).forEach(h => h.textContent = state.color2.toUpperCase());
+    const gradTypeButtons = document.querySelectorAll(`[data-gradtype-group="${prefix}"] button`);
+    gradTypeButtons.forEach(b => b.classList.toggle('active', b.dataset.gradtype === state.gradType));
+    document.querySelector(`[data-angle-wrap="${prefix}"]`).classList.toggle('show', state.gradType === 'linear');
+    const angleInput = document.querySelector(`[data-angle="${prefix}"]`);
+    angleInput.value = state.angle;
+    document.querySelector(`[data-angle-val="${prefix}"]`).textContent = state.angle + '°';
+  }
+  function applyPreset(id){
+    const preset = getPresets().find(p => p.id === id);
+    if(!preset) return;
+
+    selectedDotsType = preset.dotsType;
+    selectedCSquareType = preset.csquareType;
+    selectedCDotType = preset.cdotType;
+    setActiveInGroup('dots-type-group', preset.dotsType);
+    setActiveInGroup('csquare-type-group', preset.csquareType);
+    setActiveInGroup('cdot-type-group', preset.cdotType);
+
+    logoBgShape = preset.logoBgShape;
+    setActiveInGroup('logo-bg-group', preset.logoBgShape);
+
+    ['dots','csquare','cdot'].forEach(prefix => applyColorGroupState(prefix, preset.colorState[prefix]));
+
+    bgColorInput.value = preset.bgColor;
+    bgHex.textContent = preset.bgColor.toUpperCase();
+
+    logoSize.value = preset.logoSize;
+    logoSizeVal.textContent = preset.logoSize + '%';
+    logoPadding.value = preset.logoPadding;
+    logoPaddingVal.textContent = preset.logoPadding + '%';
+
+    targetSize = preset.targetSize;
+    sizeGroup.querySelectorAll('button').forEach(b => b.classList.toggle('active', parseInt(b.dataset.size,10) === targetSize));
+
+    checkLogoSafety();
+    checkContrast();
+    scheduleGenerate();
+  }
+  function renderPresets(){
+    const presets = getPresets();
+    presetListEl.innerHTML = '';
+    presetEmpty.style.display = presets.length ? 'none' : 'block';
+    presets.forEach(p => {
+      const card = document.createElement('div');
+      card.className = 'preset-card';
+      card.innerHTML = `
+        <div class="preset-swatch" style="background:${p.bgColor}">
+          <span class="preset-dot" style="background:${p.colorState.dots.color1}"></span>
+        </div>
+        <div class="preset-info">
+          <span class="preset-name">${escapeHtml(p.name)}</span>
+          <div class="preset-actions">
+            <button type="button" class="pill-btn" data-apply="${p.id}">Usar</button>
+            <button type="button" class="pill-btn danger" data-del="${p.id}">Borrar</button>
+          </div>
+        </div>`;
+      presetListEl.appendChild(card);
+    });
+    presetListEl.querySelectorAll('[data-apply]').forEach(btn => {
+      btn.addEventListener('click', () => applyPreset(btn.dataset.apply));
+    });
+    presetListEl.querySelectorAll('[data-del]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        setPresets(getPresets().filter(p => p.id !== btn.dataset.del));
+        renderPresets();
+      });
+    });
+  }
+  presetSaveBtn.addEventListener('click', () => {
+    const name = presetNameInput.value.trim() || 'Diseño sin nombre';
+    const presets = getPresets();
+    presets.unshift({ id: 'p' + Date.now(), name, ...currentStyleSnapshot() });
+    const ok = setPresets(presets.slice(0, 20));
+    if(!ok){
+      presetEmpty.textContent = 'No se pudo guardar. Revisa los permisos de almacenamiento del navegador.';
+      presetEmpty.style.display = 'block';
+      return;
+    }
+    presetNameInput.value = '';
+    renderPresets();
+  });
+  renderPresets();
+
+  /* ---------- creative templates ---------- */
+  const templates = [
+    {
+      id:'negocio', ambit:'Negocios', name:'Tarjeta profesional',
+      bg:'#0B1F2A', bgGradient:null,
+      titleColor:'#F4E9D8', subtitleColor:'#C9A227', accent:'#C9A227',
+      accentOptions:['#C9A227','#7FB3B0','#E5E5EA'],
+      titleFont:'"Playfair Display", serif', subtitleFont:'"Inter", sans-serif',
+      titleSize:60, subtitleSize:22,
+      defaultTitle:'Conectemos', defaultSubtitle:'Escanea para ver mi perfil profesional',
+      decoration:'lines'
+    },
+    {
+      id:'boda', ambit:'Evento · Boda', name:'Invitación romántica',
+      bg:'#F7E9E4', bgGradient:null,
+      titleColor:'#7A4B3A', subtitleColor:'#B98A73', accent:'#B98A73',
+      accentOptions:['#B98A73','#C9A227','#8E7CC3'],
+      titleFont:'"Great Vibes", cursive', subtitleFont:'"Cormorant Garamond", serif',
+      titleSize:96, subtitleSize:24,
+      defaultTitle:'Nos casamos', defaultSubtitle:'Escanea para confirmar tu asistencia',
+      decoration:'frame'
+    },
+    {
+      id:'restaurante', ambit:'Restaurante', name:'Carta digital',
+      bg:'#C1502E', bgGradient:null,
+      titleColor:'#FFF8ED', subtitleColor:'#FFD9B3', accent:'#FFD9B3',
+      accentOptions:['#FFD9B3','#FFFFFF','#2E7D5B'],
+      titleFont:'"Oswald", sans-serif', subtitleFont:'"Inter", sans-serif',
+      titleSize:66, subtitleSize:22,
+      defaultTitle:'NUESTRO MENÚ', defaultSubtitle:'Escanea para ver la carta completa',
+      decoration:'dots'
+    },
+    {
+      id:'social', ambit:'Redes sociales', name:'Sígueme',
+      bg:'#DD2A7B', bgGradient:['#F58529','#DD2A7B','#8134AF','#515BD4'],
+      titleColor:'#FFFFFF', subtitleColor:'#FFFFFF', accent:'#FFFFFF',
+      accentOptions:['#FFFFFF','#FFE066','#00F0FF'],
+      titleFont:'"Poppins", sans-serif', subtitleFont:'"Poppins", sans-serif',
+      titleSize:62, subtitleSize:22,
+      defaultTitle:'SÍGUENOS', defaultSubtitle:'@tuusuario en todas las redes',
+      decoration:'blob'
+    },
+    {
+      id:'wifi', ambit:'WiFi', name:'Acceso WiFi',
+      bg:'#0F1720', bgGradient:null,
+      titleColor:'#E6FBFF', subtitleColor:'#22D3EE', accent:'#22D3EE',
+      accentOptions:['#22D3EE','#A78BFA','#F472B6'],
+      titleFont:'"JetBrains Mono", monospace', subtitleFont:'"JetBrains Mono", monospace',
+      titleSize:50, subtitleSize:20,
+      defaultTitle:'WiFi gratis', defaultSubtitle:'Escanea y conéctate en segundos',
+      decoration:'grid'
+    },
+    {
+      id:'inmobiliaria', ambit:'Inmobiliaria', name:'En venta',
+      bg:'#F5F1EA', bgGradient:null,
+      titleColor:'#1D1D1F', subtitleColor:'#6E6E73', accent:'#1D1D1F',
+      accentOptions:['#1D1D1F','#8E6E53','#3B5F4C'],
+      titleFont:'"Cormorant Garamond", serif', subtitleFont:'"Inter", sans-serif',
+      titleSize:56, subtitleSize:20,
+      defaultTitle:'EN VENTA', defaultSubtitle:'Escanea para ver el tour virtual',
+      decoration:'corner'
+    }
+  ];
+
+  const FONT_OPTIONS = [
+    {label:'Playfair Display · serif elegante', value:'"Playfair Display", serif'},
+    {label:'Cormorant Garamond · serif clásica', value:'"Cormorant Garamond", serif'},
+    {label:'Merriweather · editorial', value:'"Merriweather", serif'},
+    {label:'Great Vibes · caligráfica', value:'"Great Vibes", cursive'},
+    {label:'Dancing Script · manuscrita', value:'"Dancing Script", cursive'},
+    {label:'Oswald · condensada bold', value:'"Oswald", sans-serif'},
+    {label:'Bebas Neue · display impactante', value:'"Bebas Neue", sans-serif'},
+    {label:'Poppins · redondeada moderna', value:'"Poppins", sans-serif'},
+    {label:'Montserrat · geométrica', value:'"Montserrat", sans-serif'},
+    {label:'Space Grotesk · técnica moderna', value:'"Space Grotesk", sans-serif'},
+    {label:'Inter · neutra', value:'"Inter", sans-serif'},
+    {label:'JetBrains Mono · monoespaciada', value:'"JetBrains Mono", monospace'}
+  ];
+  const FONT_PRELOAD = [
+    '800 60px "Playfair Display"', '600 40px "Cormorant Garamond"', '900 40px "Merriweather"',
+    '400 60px "Great Vibes"', '700 50px "Dancing Script"', '600 40px "Oswald"',
+    '400 60px "Bebas Neue"', '700 40px "Poppins"', '800 40px "Montserrat"',
+    '700 40px "Space Grotesk"', '700 16px "Inter"', '600 30px "JetBrains Mono"'
+  ];
+
+  const QR_ICON_SVG = (color) => `<svg viewBox="0 0 24 24" width="30" height="30" fill="${color}">
+    <rect x="1" y="1" width="7" height="7" rx="1.4"/><rect x="16" y="1" width="7" height="7" rx="1.4"/>
+    <rect x="1" y="16" width="7" height="7" rx="1.4"/><rect x="10.5" y="1" width="3.5" height="3.5" rx="1"/>
+    <rect x="1" y="10.5" width="3.5" height="3.5" rx="1"/><rect x="19.5" y="10.5" width="3.5" height="3.5" rx="1"/>
+    <rect x="10.5" y="19.5" width="3.5" height="3.5" rx="1"/><rect x="16" y="16" width="7" height="7" rx="1.4"/>
+  </svg>`;
+
+  function buildGallery(){
+    tplGrid.innerHTML = '';
+    templates.forEach(tpl => {
+      const bgStyle = tpl.bgGradient ? `linear-gradient(135deg, ${tpl.bgGradient.join(',')})` : tpl.bg;
+      const card = document.createElement('div');
+      card.className = 'tpl-card';
+      card.style.background = bgStyle;
+      card.style.color = tpl.titleColor;
+      card.innerHTML = `
+        <span class="tpl-tag">${tpl.ambit}</span>
+        <div class="tpl-preview-text" style="font-family:${tpl.titleFont};color:${tpl.titleColor};">${tpl.defaultTitle}</div>
+        <div class="tpl-preview-sub" style="color:${tpl.subtitleColor};">${tpl.defaultSubtitle}</div>
+        <div class="tpl-preview-qr-wrap"><div class="tpl-preview-qr">${QR_ICON_SVG(tpl.accent === '#FFFFFF' ? '#333' : tpl.accent)}</div></div>
+        <button type="button" class="tpl-edit-btn">Personalizar plantilla</button>
+      `;
+      card.querySelector('.tpl-edit-btn').addEventListener('click', () => openTemplateEditor(tpl.id));
+      tplGrid.appendChild(card);
+    });
+  }
+
+  function populateFontSelects(){
+    [tplTitleFontSelect, tplSubtitleFontSelect].forEach(select => {
+      select.innerHTML = FONT_OPTIONS.map(f => `<option value='${f.value}'>${f.label}</option>`).join('');
+    });
+  }
+  populateFontSelects();
+
+  const TPL_W = 900, TPL_H = 1200;
+  const tplCtx = tplCanvas.getContext('2d');
+  let currentTemplate = null;
+  let tplState = {};
+  let tplRenderToken = 0;
+  let tplDebounce = null;
+
+  function stateFromTemplate(tpl){
+    return {
+      title: tpl.defaultTitle,
+      subtitle: tpl.defaultSubtitle,
+      qrText: urlInput.value.trim() || 'generaqr.xyz',
+      titleFont: tpl.titleFont,
+      subtitleFont: tpl.subtitleFont,
+      titleColor: tpl.titleColor,
+      subtitleColor: tpl.subtitleColor,
+      bgColor: tpl.bg,
+      bgGradient: tpl.bgGradient,
+      accent: tpl.accent,
+      useMainStyle: false
+    };
+  }
+
+  function syncControlsFromState(){
+    tplTitleInput.value = tplState.title;
+    tplSubtitleInput.value = tplState.subtitle;
+    tplQrInput.value = tplState.qrText;
+    tplTitleFontSelect.value = tplState.titleFont;
+    tplSubtitleFontSelect.value = tplState.subtitleFont;
+    tplBgColor.value = tplState.bgColor;
+    tplBgHex.textContent = tplState.bgColor.toUpperCase();
+    tplTitleColor.value = tplState.titleColor;
+    tplTitleColorHex.textContent = tplState.titleColor.toUpperCase();
+    tplSubtitleColor.value = tplState.subtitleColor;
+    tplSubtitleColorHex.textContent = tplState.subtitleColor.toUpperCase();
+    tplAccentColor.value = tplState.accent;
+    tplAccentHex.textContent = tplState.accent.toUpperCase();
+    tplUseMainStyle.checked = tplState.useMainStyle;
+    buildAccentQuickSwatches(currentTemplate);
+  }
+
+  function loadTemplateFonts(){
+    return Promise.all(FONT_PRELOAD.map(f => document.fonts.load(f).catch(() => {})));
+  }
+
+  function drawDecoration(ctx, tpl, accent){
+    ctx.save();
+    ctx.globalAlpha = 0.55;
+    ctx.strokeStyle = accent;
+    ctx.fillStyle = accent;
+    switch(tpl.decoration){
+      case 'lines':
+        ctx.lineWidth = 2;
+        for(let i=0;i<3;i++){
+          ctx.beginPath();
+          ctx.moveTo(80, 80 + i*10);
+          ctx.lineTo(220, 80 + i*10);
+          ctx.stroke();
+        }
+        break;
+      case 'frame':
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(48, 48, TPL_W-96, TPL_H-96);
+        break;
+      case 'dots':
+        for(let i=0;i<7;i++){
+          ctx.beginPath();
+          ctx.arc(70 + i*16, 70, 4, 0, Math.PI*2);
+          ctx.fill();
+        }
+        break;
+      case 'blob':
+        ctx.globalAlpha = 0.22;
+        ctx.beginPath(); ctx.arc(TPL_W-100, 130, 220, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(90, TPL_H-150, 180, 0, Math.PI*2); ctx.fill();
+        break;
+      case 'grid':
+        ctx.globalAlpha = 0.2;
+        ctx.lineWidth = 1;
+        for(let x=60;x<TPL_W-60;x+=36){
+          ctx.beginPath(); ctx.moveTo(x,58); ctx.lineTo(x,170); ctx.stroke();
+        }
+        break;
+      case 'corner':
+        ctx.lineWidth = 2;
+        ctx.strokeRect(56,56,110,110);
+        ctx.strokeRect(TPL_W-166,TPL_H-166,110,110);
+        break;
+    }
+    ctx.restore();
+  }
+
+  function wrapText(ctx, text, x, y, maxWidth, lineHeight){
+    const words = String(text).split(' ');
+    let line = '', lines = [];
+    words.forEach(w => {
+      const test = line ? line + ' ' + w : w;
+      if(ctx.measureText(test).width > maxWidth && line){
+        lines.push(line); line = w;
+      } else { line = test; }
+    });
+    if(line) lines.push(line);
+    lines.forEach((l,i) => ctx.fillText(l, x, y + i*lineHeight));
+    return lines.length;
+  }
+
+  function buildTemplateQrOptions(){
+    if(tplState.useMainStyle){
+      return {
+        dotsOptions: Object.assign({ type: selectedDotsType }, getColorOption('dots')),
+        cornersSquareOptions: Object.assign({ type: selectedCSquareType }, getColorOption('csquare')),
+        cornersDotOptions: Object.assign({ type: selectedCDotType }, getColorOption('cdot'))
+      };
+    }
+    return {
+      dotsOptions: { type: 'rounded', color: tplState.accent },
+      cornersSquareOptions: { type: 'extra-rounded', color: tplState.accent },
+      cornersDotOptions: { type: 'dot', color: tplState.accent }
+    };
+  }
+
+  function renderTemplateQR(cb){
+    const hiddenDiv = document.createElement('div');
+    hiddenDiv.style.position = 'fixed'; hiddenDiv.style.left = '-9999px';
+    document.body.appendChild(hiddenDiv);
+    const qrObj = new QRCodeStyling(Object.assign({
+      width: 480, height: 480, type: 'canvas',
+      data: tplState.qrText || 'generaqr.xyz',
+      margin: 10,
+      qrOptions: { errorCorrectionLevel: 'H' },
+      backgroundOptions: { color: '#ffffff' }
+    }, buildTemplateQrOptions()));
+    qrObj.append(hiddenDiv);
+    setTimeout(() => {
+      const c = hiddenDiv.querySelector('canvas');
+      cb(c);
+      document.body.removeChild(hiddenDiv);
+    }, 120);
+  }
+
+  function renderTemplate(){
+    if(!currentTemplate) return;
+    const token = ++tplRenderToken;
+    const tpl = currentTemplate;
+
+    loadTemplateFonts().then(() => {
+      if(token !== tplRenderToken) return;
+
+      tplCtx.clearRect(0,0,TPL_W,TPL_H);
+      if(tplState.bgGradient){
+        const g = tplCtx.createLinearGradient(0,0,TPL_W,TPL_H);
+        tplState.bgGradient.forEach((c,i) => g.addColorStop(i/(tplState.bgGradient.length-1), c));
+        tplCtx.fillStyle = g;
+      } else {
+        tplCtx.fillStyle = tplState.bgColor;
+      }
+      tplCtx.fillRect(0,0,TPL_W,TPL_H);
+
+      drawDecoration(tplCtx, tpl, tplState.accent);
+
+      tplCtx.textAlign = 'center';
+      tplCtx.fillStyle = tplState.titleColor;
+      tplCtx.font = `800 ${tpl.titleSize}px ${tplState.titleFont}`;
+      wrapText(tplCtx, tplState.title || tpl.defaultTitle, TPL_W/2, 190, TPL_W-160, tpl.titleSize*1.05);
+
+      tplCtx.fillStyle = tplState.subtitleColor;
+      tplCtx.font = `500 ${tpl.subtitleSize}px ${tplState.subtitleFont}`;
+      tplCtx.globalAlpha = 0.92;
+      wrapText(tplCtx, tplState.subtitle || tpl.defaultSubtitle, TPL_W/2, 268, TPL_W-220, tpl.subtitleSize*1.4);
+      tplCtx.globalAlpha = 1;
+
+      renderTemplateQR((qrCanvas) => {
+        if(token !== tplRenderToken || !qrCanvas) return;
+        const qrSize = 420, qx = (TPL_W - qrSize)/2, qy = 420, pad = 28;
+        tplCtx.save();
+        tplCtx.shadowColor = 'rgba(0,0,0,0.18)';
+        tplCtx.shadowBlur = 30;
+        tplCtx.shadowOffsetY = 12;
+        roundRect(tplCtx, qx-pad, qy-pad, qrSize+pad*2, qrSize+pad*2, 28);
+        tplCtx.fillStyle = '#ffffff';
+        tplCtx.fill();
+        tplCtx.restore();
+        tplCtx.drawImage(qrCanvas, qx, qy, qrSize, qrSize);
+
+        tplCtx.fillStyle = tplState.subtitleColor;
+        tplCtx.font = `600 16px "Inter"`;
+        tplCtx.textAlign = 'center';
+        tplCtx.globalAlpha = 0.85;
+        tplCtx.fillText('ESCANEA CON LA CÁMARA', TPL_W/2, qy+qrSize+pad+42);
+        tplCtx.globalAlpha = 1;
+
+        tplDownloadBtn.disabled = false;
+      });
+    });
+  }
+  function scheduleTplRender(){ clearTimeout(tplDebounce); tplDebounce = setTimeout(renderTemplate, 250); }
+
+  function buildAccentQuickSwatches(tpl){
+    tplAccentGroup.innerHTML = '';
+    tpl.accentOptions.forEach(color => {
+      const el = document.createElement('div');
+      el.className = 'swatch accent-swatch' + (color.toLowerCase() === tplState.accent.toLowerCase() ? ' active' : '');
+      el.innerHTML = `<span class="accent-dot" style="background:${color}"></span>`;
+      el.addEventListener('click', () => {
+        tplAccentGroup.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+        el.classList.add('active');
+        tplState.accent = color;
+        tplAccentColor.value = color;
+        tplAccentHex.textContent = color.toUpperCase();
+        renderTemplate();
+      });
+      tplAccentGroup.appendChild(el);
+    });
+  }
+
+  function openTemplateEditor(id){
+    currentTemplate = templates.find(t => t.id === id);
+    tplState = stateFromTemplate(currentTemplate);
+    tplEditorTitle.textContent = currentTemplate.name;
+    tplDownloadBtn.disabled = true;
+    syncControlsFromState();
+    tplGallery.classList.remove('active');
+    tplEditor.classList.add('active');
+    renderTemplate();
+  }
+
+  tplBackBtn.addEventListener('click', () => {
+    tplEditor.classList.remove('active');
+    tplGallery.classList.add('active');
+  });
+  tplResetBtn.addEventListener('click', () => {
+    if(!currentTemplate) return;
+    tplState = stateFromTemplate(currentTemplate);
+    syncControlsFromState();
+    renderTemplate();
+  });
+  tplTitleInput.addEventListener('input', () => { tplState.title = tplTitleInput.value; scheduleTplRender(); });
+  tplSubtitleInput.addEventListener('input', () => { tplState.subtitle = tplSubtitleInput.value; scheduleTplRender(); });
+  tplQrInput.addEventListener('input', () => {
+    tplState.qrText = tplQrInput.value.trim() || 'generaqr.xyz';
+    scheduleTplRender();
+  });
+  tplTitleFontSelect.addEventListener('change', () => { tplState.titleFont = tplTitleFontSelect.value; renderTemplate(); });
+  tplSubtitleFontSelect.addEventListener('change', () => { tplState.subtitleFont = tplSubtitleFontSelect.value; renderTemplate(); });
+  tplBgColor.addEventListener('input', () => {
+    tplState.bgColor = tplBgColor.value;
+    tplState.bgGradient = null;
+    tplBgHex.textContent = tplBgColor.value.toUpperCase();
+    scheduleTplRender();
+  });
+  tplTitleColor.addEventListener('input', () => {
+    tplState.titleColor = tplTitleColor.value;
+    tplTitleColorHex.textContent = tplTitleColor.value.toUpperCase();
+    scheduleTplRender();
+  });
+  tplSubtitleColor.addEventListener('input', () => {
+    tplState.subtitleColor = tplSubtitleColor.value;
+    tplSubtitleColorHex.textContent = tplSubtitleColor.value.toUpperCase();
+    scheduleTplRender();
+  });
+  tplAccentColor.addEventListener('input', () => {
+    tplState.accent = tplAccentColor.value;
+    tplAccentHex.textContent = tplAccentColor.value.toUpperCase();
+    tplAccentGroup.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+    scheduleTplRender();
+  });
+  tplUseMainStyle.addEventListener('change', () => {
+    tplState.useMainStyle = tplUseMainStyle.checked;
+    renderTemplate();
+  });
+  tplDownloadBtn.addEventListener('click', () => {
+    if(!currentTemplate) return;
+    const link = document.createElement('a');
+    link.download = `generaqr-${currentTemplate.id}.png`;
+    link.href = tplCanvas.toDataURL('image/png');
+    link.click();
+  });
+
+  buildGallery();
+
+  /* ---------- init ---------- */
+  checkContrast();
+  generate(false);
+</script>
+</body>
+</html>
