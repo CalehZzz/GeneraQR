@@ -137,9 +137,26 @@
   }
   @media (max-width:900px){
     .grid{grid-template-columns:1fr;}
+    .preview-panel{order:-1;position:sticky;top:10px;z-index:20;}
+    .preview-card{padding:18px;gap:14px;}
+    .qr-stage{max-width:180px;}
   }
 
   .stack{display:flex;flex-direction:column;gap:18px;}
+
+  /* ---------- content type picker ---------- */
+  .type-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(84px, 1fr));
+    gap:9px;
+  }
+  .type-swatch{padding:13px 6px 11px;}
+  .type-swatch svg{width:26px;height:26px;}
+  .content-field{display:none;}
+  .content-field.active{display:block;}
+  .field-hint{font-size:11px;color:var(--text-faint);margin-top:7px;line-height:1.4;}
+  .field-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media (max-width:480px){ .field-row-2{grid-template-columns:1fr;} }
 
   /* tab navigation for option groups */
   .tabs{
@@ -222,7 +239,7 @@
     margin-bottom:10px;
   }
 
-  input[type="text"]{
+  input[type="text"], input[type="datetime-local"]{
     width:100%;
     background:var(--surface-soft);
     border:1px solid var(--border);
@@ -233,7 +250,7 @@
     font-family:inherit;
     transition:border-color .15s ease, box-shadow .15s ease;
   }
-  input[type="text"]:focus{
+  input[type="text"]:focus, input[type="datetime-local"]:focus{
     outline:none;
     border-color:var(--accent);
     box-shadow:0 0 0 4px var(--accent-soft);
@@ -349,7 +366,16 @@
   }
   input[type="color"]::-webkit-color-swatch-wrapper{padding:0;}
   input[type="color"]::-webkit-color-swatch{border:1px solid var(--border);border-radius:8px;}
-  .hex-val{font-size:12px;color:var(--text-dim);font-weight:500;text-transform:uppercase;}
+  input.hex-val{
+    font-size:12px;color:var(--text-dim);font-weight:600;text-transform:uppercase;
+    font-family:'JetBrains Mono', ui-monospace, monospace;
+    background:transparent;border:1px solid transparent;border-radius:7px;
+    padding:4px 6px;width:78px;letter-spacing:0.02em;
+    transition:border-color .12s ease, background .12s ease, color .12s ease;
+  }
+  input.hex-val:hover{background:var(--surface);border-color:var(--border);color:var(--text);}
+  input.hex-val:focus{outline:none;background:var(--surface);border-color:var(--accent);color:var(--text);box-shadow:0 0 0 3px var(--accent-soft);}
+  input.hex-val.invalid{border-color:var(--accent-2);color:var(--accent-2);}
 
   .gradient-row{display:none;flex-direction:column;gap:12px;}
   .gradient-row.show{display:flex;}
@@ -634,12 +660,13 @@
     gap:24px;
     align-items:start;
   }
-  @media (max-width:900px){ .tpl-editor-grid{grid-template-columns:1fr;} }
   .tpl-canvas-wrap{
     background:var(--surface);
     border-radius:24px;
     padding:20px;
     box-shadow:var(--shadow-md);
+    position:sticky;
+    top:24px;
   }
   .tpl-canvas-wrap canvas{
     width:100%;
@@ -649,6 +676,11 @@
     margin:0 auto;
     border-radius:16px;
     box-shadow:var(--shadow-lg);
+  }
+  @media (max-width:900px){
+    .tpl-editor-grid{grid-template-columns:1fr;}
+    .tpl-canvas-wrap{order:-1;top:10px;padding:14px;z-index:20;}
+    .tpl-canvas-wrap canvas{max-width:220px;}
   }
   .tpl-controls{display:flex;flex-direction:column;gap:16px;}
   .tpl-download-btn{width:100%;padding:15px;border-radius:16px;font-size:14px;}
@@ -743,7 +775,7 @@
   <header>
     <div class="eyebrow">Generador de códigos QR</div>
     <h1>GeneraQR</h1>
-    <p>Crea códigos QR personalizados gratis: cambia colores, degradados, formas de esquina y añade tu logo. Todo se genera al instante en tu navegador, sin registrarte y sin marcas de agua.</p>
+    <p>Crea códigos QR para enlaces, WiFi, WhatsApp, e-mail, eventos, redes sociales y más. Personaliza colores, degradados, formas y tu logo — todo se genera al instante en tu navegador, sin registrarte y sin marcas de agua.</p>
   </header>
 
   <div class="mode-toggle" id="mode-toggle">
@@ -765,9 +797,150 @@
 
       <div class="tab-panel active" data-panel="content">
       <div class="card">
-        <div class="field" style="margin-bottom:0;">
-          <label class="field-label" for="url-input">Enlace o texto</label>
-          <input type="text" id="url-input" placeholder="https://tusitio.com" value="generaqr.xyz">
+        <p class="card-title">¿Qué quieres compartir?</p>
+        <p class="card-subtitle">Elige el tipo de contenido — el QR se genera según el formato correcto para cada uno.</p>
+        <div class="type-grid" id="content-type-grid"></div>
+      </div>
+
+      <div class="card">
+        <div class="content-field active" data-content-type="link">
+          <div class="field" style="margin-bottom:0;">
+            <label class="field-label" for="url-input">Enlace o texto</label>
+            <input type="text" id="url-input" placeholder="https://tusitio.com" value="generaqr.xyz">
+          </div>
+        </div>
+
+        <div class="content-field" data-content-type="email">
+          <div class="field">
+            <label class="field-label" for="email-to">Correo del destinatario</label>
+            <input type="text" id="email-to" placeholder="hola@tunegocio.com">
+          </div>
+          <div class="field">
+            <label class="field-label" for="email-subject">Asunto (opcional)</label>
+            <input type="text" id="email-subject" placeholder="Quiero más información">
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label class="field-label" for="email-body">Mensaje (opcional)</label>
+            <input type="text" id="email-body" placeholder="Escribe un mensaje predefinido">
+          </div>
+        </div>
+
+        <div class="content-field" data-content-type="call">
+          <div class="field" style="margin-bottom:0;">
+            <label class="field-label" for="call-phone">Número de teléfono</label>
+            <input type="text" id="call-phone" placeholder="+503 7123 4567">
+            <p class="field-hint">Al escanear, el teléfono ofrece llamar directamente a este número.</p>
+          </div>
+        </div>
+
+        <div class="content-field" data-content-type="whatsapp">
+          <div class="field">
+            <label class="field-label" for="wa-phone">Número de WhatsApp</label>
+            <input type="text" id="wa-phone" placeholder="50371234567">
+            <p class="field-hint">Incluye el código de país, sin espacios ni signo +.</p>
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label class="field-label" for="wa-message">Mensaje predefinido (opcional)</label>
+            <input type="text" id="wa-message" placeholder="Hola, quisiera más información">
+          </div>
+        </div>
+
+        <div class="content-field" data-content-type="wifi">
+          <div class="field">
+            <label class="field-label" for="wifi-ssid">Nombre de la red (SSID)</label>
+            <input type="text" id="wifi-ssid" placeholder="Mi_Red_WiFi">
+          </div>
+          <div class="field-row-2">
+            <div class="field">
+              <label class="field-label" for="wifi-enc">Seguridad</label>
+              <select id="wifi-enc">
+                <option value="WPA">WPA / WPA2</option>
+                <option value="WEP">WEP</option>
+                <option value="nopass">Sin contraseña</option>
+              </select>
+            </div>
+            <div class="field" id="wifi-password-field">
+              <label class="field-label" for="wifi-password">Contraseña</label>
+              <input type="text" id="wifi-password" placeholder="••••••••">
+            </div>
+          </div>
+          <label class="toggle-row" style="margin-bottom:0;">
+            <input type="checkbox" id="wifi-hidden">
+            <span>Es una red oculta</span>
+          </label>
+        </div>
+
+        <div class="content-field" data-content-type="pdf">
+          <div class="field" style="margin-bottom:0;">
+            <label class="field-label" for="pdf-url">Enlace al archivo PDF</label>
+            <input type="text" id="pdf-url" placeholder="https://tusitio.com/documento.pdf">
+            <p class="field-hint">Sube tu PDF a Google Drive, Dropbox o tu sitio, y pega aquí el enlace público.</p>
+          </div>
+        </div>
+
+        <div class="content-field" data-content-type="app">
+          <div class="field" style="margin-bottom:0;">
+            <label class="field-label" for="app-url">Enlace de descarga</label>
+            <input type="text" id="app-url" placeholder="https://play.google.com/store/apps/...">
+            <p class="field-hint">Enlace de App Store, Google Play o el que prefieras usar.</p>
+          </div>
+        </div>
+
+        <div class="content-field" data-content-type="image">
+          <div class="field" style="margin-bottom:0;">
+            <label class="field-label" for="img-url">Enlace a la imagen</label>
+            <input type="text" id="img-url" placeholder="https://tusitio.com/imagen.jpg">
+          </div>
+        </div>
+
+        <div class="content-field" data-content-type="video">
+          <div class="field" style="margin-bottom:0;">
+            <label class="field-label" for="video-url">Enlace al video</label>
+            <input type="text" id="video-url" placeholder="https://youtube.com/watch?v=...">
+          </div>
+        </div>
+
+        <div class="content-field" data-content-type="social">
+          <div class="field">
+            <label class="field-label" for="social-platform">Plataforma</label>
+            <select id="social-platform">
+              <option value="instagram">Instagram</option>
+              <option value="facebook">Facebook</option>
+              <option value="twitter">X (Twitter)</option>
+              <option value="tiktok">TikTok</option>
+              <option value="linkedin">LinkedIn</option>
+              <option value="youtube">YouTube</option>
+            </select>
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label class="field-label" for="social-handle">Usuario o enlace</label>
+            <input type="text" id="social-handle" placeholder="@tuusuario">
+          </div>
+        </div>
+
+        <div class="content-field" data-content-type="event">
+          <div class="field">
+            <label class="field-label" for="event-title">Nombre del evento</label>
+            <input type="text" id="event-title" placeholder="Lanzamiento de producto">
+          </div>
+          <div class="field">
+            <label class="field-label" for="event-location">Ubicación (opcional)</label>
+            <input type="text" id="event-location" placeholder="Salón principal, San Salvador">
+          </div>
+          <div class="field-row-2">
+            <div class="field">
+              <label class="field-label" for="event-start">Inicio</label>
+              <input type="datetime-local" id="event-start">
+            </div>
+            <div class="field">
+              <label class="field-label" for="event-end">Fin (opcional)</label>
+              <input type="datetime-local" id="event-end">
+            </div>
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label class="field-label" for="event-desc">Descripción (opcional)</label>
+            <input type="text" id="event-desc" placeholder="Detalles del evento">
+          </div>
         </div>
       </div>
       </div>
@@ -808,18 +981,18 @@
           <div class="color-row" data-solid-row="dots">
             <div class="swatch-input">
               <input type="color" data-color1="dots" value="#1D1D1F">
-              <span class="hex-val" data-hex1="dots">#1D1D1F</span>
+              <input type="text" class="hex-val" data-hex1="dots" value="#1D1D1F" maxlength="7" spellcheck="false" autocomplete="off">
             </div>
           </div>
           <div class="gradient-row" data-gradient-row="dots">
             <div class="color-row">
               <div class="swatch-input">
                 <input type="color" data-color1="dots" value="#0A84FF">
-                <span class="hex-val" data-hex1="dots">#0A84FF</span>
+                <input type="text" class="hex-val" data-hex1="dots" value="#0A84FF" maxlength="7" spellcheck="false" autocomplete="off">
               </div>
               <div class="swatch-input">
                 <input type="color" data-color2="dots" value="#FF375F">
-                <span class="hex-val" data-hex2="dots">#FF375F</span>
+                <input type="text" class="hex-val" data-hex2="dots" value="#FF375F" maxlength="7" spellcheck="false" autocomplete="off">
               </div>
             </div>
             <div class="segmented" data-gradtype-group="dots">
@@ -844,18 +1017,18 @@
           <div class="color-row" data-solid-row="csquare">
             <div class="swatch-input">
               <input type="color" data-color1="csquare" value="#1D1D1F">
-              <span class="hex-val" data-hex1="csquare">#1D1D1F</span>
+              <input type="text" class="hex-val" data-hex1="csquare" value="#1D1D1F" maxlength="7" spellcheck="false" autocomplete="off">
             </div>
           </div>
           <div class="gradient-row" data-gradient-row="csquare">
             <div class="color-row">
               <div class="swatch-input">
                 <input type="color" data-color1="csquare" value="#0A84FF">
-                <span class="hex-val" data-hex1="csquare">#0A84FF</span>
+                <input type="text" class="hex-val" data-hex1="csquare" value="#0A84FF" maxlength="7" spellcheck="false" autocomplete="off">
               </div>
               <div class="swatch-input">
                 <input type="color" data-color2="csquare" value="#FF375F">
-                <span class="hex-val" data-hex2="csquare">#FF375F</span>
+                <input type="text" class="hex-val" data-hex2="csquare" value="#FF375F" maxlength="7" spellcheck="false" autocomplete="off">
               </div>
             </div>
             <div class="segmented" data-gradtype-group="csquare">
@@ -880,18 +1053,18 @@
           <div class="color-row" data-solid-row="cdot">
             <div class="swatch-input">
               <input type="color" data-color1="cdot" value="#1D1D1F">
-              <span class="hex-val" data-hex1="cdot">#1D1D1F</span>
+              <input type="text" class="hex-val" data-hex1="cdot" value="#1D1D1F" maxlength="7" spellcheck="false" autocomplete="off">
             </div>
           </div>
           <div class="gradient-row" data-gradient-row="cdot">
             <div class="color-row">
               <div class="swatch-input">
                 <input type="color" data-color1="cdot" value="#0A84FF">
-                <span class="hex-val" data-hex1="cdot">#0A84FF</span>
+                <input type="text" class="hex-val" data-hex1="cdot" value="#0A84FF" maxlength="7" spellcheck="false" autocomplete="off">
               </div>
               <div class="swatch-input">
                 <input type="color" data-color2="cdot" value="#FF375F">
-                <span class="hex-val" data-hex2="cdot">#FF375F</span>
+                <input type="text" class="hex-val" data-hex2="cdot" value="#FF375F" maxlength="7" spellcheck="false" autocomplete="off">
               </div>
             </div>
             <div class="segmented" data-gradtype-group="cdot">
@@ -912,7 +1085,7 @@
           <div class="color-row">
             <div class="swatch-input">
               <input type="color" id="bg-color" value="#FFFFFF">
-              <span class="hex-val" id="bg-hex">#FFFFFF</span>
+              <input type="text" class="hex-val" id="bg-hex" value="#FFFFFF" maxlength="7" spellcheck="false" autocomplete="off">
             </div>
           </div>
           <div class="contrast-warning" id="contrast-warning">⚠ Poco contraste — puede fallar al escanear</div>
@@ -1010,7 +1183,7 @@
       <div class="preview-card">
         <div class="qr-stage">
           <div id="qr-canvas-holder"></div>
-          <div class="empty-state" id="empty-state">Esperando enlace…</div>
+          <div class="empty-state" id="empty-state">Esperando contenido…</div>
         </div>
         <div class="actions">
           <button class="ghost" id="regenerate-btn">Regenerar</button>
@@ -1031,7 +1204,7 @@
     <div class="tpl-gallery active" id="tpl-gallery">
       <div class="tpl-gallery-head">
         <h2>Plantillas listas para cada ocasión</h2>
-        <p>Diseños con tipografía y colores propios para negocios, eventos, redes sociales, WiFi y más. Edita el texto, elige un acento y descarga tu QR con diseño incluido.</p>
+        <p>Doce diseños con tipografía, paleta y composición propias — desde WiFi y redes sociales hasta promociones, eventos y portafolios. Edita el texto, elige un acento y descarga tu QR con diseño incluido.</p>
       </div>
       <div class="tpl-grid" id="tpl-grid"></div>
     </div>
@@ -1083,21 +1256,21 @@
               <label class="field-label">Fondo</label>
               <div class="swatch-input">
                 <input type="color" id="tpl-bg-color">
-                <span class="hex-val" id="tpl-bg-hex">—</span>
+                <input type="text" class="hex-val" id="tpl-bg-hex" value="" placeholder="—" maxlength="7" spellcheck="false" autocomplete="off">
               </div>
             </div>
             <div class="field">
               <label class="field-label">Título</label>
               <div class="swatch-input">
                 <input type="color" id="tpl-title-color">
-                <span class="hex-val" id="tpl-title-color-hex">—</span>
+                <input type="text" class="hex-val" id="tpl-title-color-hex" value="" placeholder="—" maxlength="7" spellcheck="false" autocomplete="off">
               </div>
             </div>
             <div class="field">
               <label class="field-label">Subtítulo</label>
               <div class="swatch-input">
                 <input type="color" id="tpl-subtitle-color">
-                <span class="hex-val" id="tpl-subtitle-color-hex">—</span>
+                <input type="text" class="hex-val" id="tpl-subtitle-color-hex" value="" placeholder="—" maxlength="7" spellcheck="false" autocomplete="off">
               </div>
             </div>
             <div class="field" style="margin-bottom:14px;">
@@ -1105,7 +1278,7 @@
               <div class="color-row">
                 <div class="swatch-input">
                   <input type="color" id="tpl-accent-color">
-                  <span class="hex-val" id="tpl-accent-hex">—</span>
+                  <input type="text" class="hex-val" id="tpl-accent-hex" value="" placeholder="—" maxlength="7" spellcheck="false" autocomplete="off">
                 </div>
                 <div class="swatch-grid" id="tpl-accent-group" style="flex:1;"></div>
               </div>
@@ -1268,6 +1441,7 @@
   let debounceTimer = null;
   let targetSize = 1024;
   let logoBgShape = 'rounded';
+  let contentType = 'link';
 
   const dotsTypes = [
     {value:'square', label:'Cuadrado', shape:'shape-square'},
@@ -1359,7 +1533,7 @@
     document.querySelectorAll(`[data-color1="${prefix}"]`).forEach(input => {
       input.addEventListener('input', () => {
         colorState[prefix].color1 = input.value;
-        document.querySelectorAll(`[data-hex1="${prefix}"]`).forEach(h => h.textContent = input.value.toUpperCase());
+        document.querySelectorAll(`[data-hex1="${prefix}"]`).forEach(h => h.value = input.value.toUpperCase());
         // keep both solid + gradient color1 pickers in sync visually
         document.querySelectorAll(`[data-color1="${prefix}"]`).forEach(i => { if(i!==input) i.value = input.value; });
         checkContrast();
@@ -1369,7 +1543,7 @@
     document.querySelectorAll(`[data-color2="${prefix}"]`).forEach(input => {
       input.addEventListener('input', () => {
         colorState[prefix].color2 = input.value;
-        document.querySelectorAll(`[data-hex2="${prefix}"]`).forEach(h => h.textContent = input.value.toUpperCase());
+        document.querySelectorAll(`[data-hex2="${prefix}"]`).forEach(h => h.value = input.value.toUpperCase());
         scheduleGenerate();
       });
     });
@@ -1413,7 +1587,7 @@
 
   /* ---------- background + contrast ---------- */
   bgColorInput.addEventListener('input', () => {
-    bgHex.textContent = bgColorInput.value.toUpperCase();
+    bgHex.value = bgColorInput.value.toUpperCase();
     checkContrast();
     scheduleGenerate();
   });
@@ -1436,6 +1610,77 @@
     const ratio = contrastRatio(dotColor, bgColorInput.value);
     contrastWarning.classList.toggle('show', ratio < 2.5);
   }
+
+  /* ---------- hex inputs: easy copy & paste ---------- */
+  function sanitizeHexInput(raw){
+    let v = (raw || '').trim();
+    if(!v) return null;
+    if(!v.startsWith('#')) v = '#' + v;
+    if(!/^#[0-9A-Fa-f]{6}$/.test(v)) return null;
+    return v.toUpperCase();
+  }
+  function revertHexInput(el){
+    if(el.dataset.hex1) el.value = colorState[el.dataset.hex1].color1.toUpperCase();
+    else if(el.dataset.hex2) el.value = colorState[el.dataset.hex2].color2.toUpperCase();
+    else if(el.id === 'bg-hex') el.value = bgColorInput.value.toUpperCase();
+    else if(el.id === 'tpl-bg-hex') el.value = (tplState.bgColor || '').toUpperCase();
+    else if(el.id === 'tpl-title-color-hex') el.value = (tplState.titleColor || '').toUpperCase();
+    else if(el.id === 'tpl-subtitle-color-hex') el.value = (tplState.subtitleColor || '').toUpperCase();
+    else if(el.id === 'tpl-accent-hex') el.value = (tplState.accent || '').toUpperCase();
+  }
+  function applyHexToTarget(el, hex){
+    if(el.dataset.hex1){
+      const prefix = el.dataset.hex1;
+      colorState[prefix].color1 = hex;
+      document.querySelectorAll(`[data-color1="${prefix}"]`).forEach(i => i.value = hex);
+      document.querySelectorAll(`[data-hex1="${prefix}"]`).forEach(h => h.value = hex);
+      checkContrast(); scheduleGenerate();
+    } else if(el.dataset.hex2){
+      const prefix = el.dataset.hex2;
+      colorState[prefix].color2 = hex;
+      document.querySelectorAll(`[data-color2="${prefix}"]`).forEach(i => i.value = hex);
+      document.querySelectorAll(`[data-hex2="${prefix}"]`).forEach(h => h.value = hex);
+      scheduleGenerate();
+    } else if(el.id === 'bg-hex'){
+      bgColorInput.value = hex;
+      checkContrast(); scheduleGenerate();
+    } else if(el.id === 'tpl-bg-hex'){
+      tplState.bgColor = hex; tplState.bgGradient = null;
+      tplBgColor.value = hex;
+      scheduleTplRender();
+    } else if(el.id === 'tpl-title-color-hex'){
+      tplState.titleColor = hex; tplTitleColor.value = hex;
+      scheduleTplRender();
+    } else if(el.id === 'tpl-subtitle-color-hex'){
+      tplState.subtitleColor = hex; tplSubtitleColor.value = hex;
+      scheduleTplRender();
+    } else if(el.id === 'tpl-accent-hex'){
+      tplState.accent = hex; tplAccentColor.value = hex;
+      document.querySelectorAll('#tpl-accent-group .swatch').forEach(s => s.classList.remove('active'));
+      scheduleTplRender();
+    }
+  }
+  function wireHexCopyPaste(){
+    document.querySelectorAll('input.hex-val').forEach(el => {
+      el.addEventListener('focus', () => el.select());
+      el.addEventListener('input', () => {
+        if(el.value && !el.value.startsWith('#')) el.value = '#' + el.value;
+      });
+      el.addEventListener('keydown', (e) => { if(e.key === 'Enter') el.blur(); });
+      el.addEventListener('change', () => {
+        const hex = sanitizeHexInput(el.value);
+        if(!hex){
+          el.classList.add('invalid');
+          setTimeout(() => { el.classList.remove('invalid'); revertHexInput(el); }, 650);
+          return;
+        }
+        el.classList.remove('invalid');
+        el.value = hex;
+        applyHexToTarget(el, hex);
+      });
+    });
+  }
+  wireHexCopyPaste();
 
   /* ---------- resolution pills ---------- */
   sizeGroup.querySelectorAll('button').forEach(btn => {
@@ -1602,7 +1847,7 @@
     const hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
     colorState.dots.color1 = hex;
     document.querySelectorAll(`[data-color1="dots"]`).forEach(i => i.value = hex);
-    document.querySelectorAll(`[data-hex1="dots"]`).forEach(h => h.textContent = hex.toUpperCase());
+    document.querySelectorAll(`[data-hex1="dots"]`).forEach(h => h.value = hex.toUpperCase());
     checkContrast();
     logoColorCanvas.classList.add('picked');
     setTimeout(() => logoColorCanvas.classList.remove('picked'), 400);
@@ -1637,6 +1882,142 @@
     ctx.closePath();
   }
 
+  /* ---------- content types: link, email, call, whatsapp, wifi, pdf, app, imágenes, video, redes sociales, evento ---------- */
+  const ICON_LINK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9.5 14.5 14.5 9.5"/><path d="M7 17 5 19a3.5 3.5 0 0 1-5-5l2-2"/><path d="M17 7l2-2a3.5 3.5 0 0 1 5 5l-2 2"/><path d="M13.5 5.5 17 2M6.5 18.5 3 22" stroke="none"/><path d="M8.5 15.5 4 20a3 3 0 0 0 4 4l4.5-4.5" stroke="none"/><path d="M9.8 14.2 6.3 17.7a3 3 0 0 0 4 4l3.5-3.5"/><path d="M14.2 9.8 17.7 6.3a3 3 0 0 1 4 4l-3.5 3.5"/></svg>`;
+  const ICON_MAIL = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="m3.5 6 8.5 7 8.5-7"/></svg>`;
+  const ICON_CALL = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5C4 14.5 9.5 20 19.5 20l1-4-5.3-1.6-1.6 2C10.9 15 9 13.1 7.6 10.4l2-1.6L8 3.5z"/></svg>`;
+  const ICON_CHAT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12a8.5 8.5 0 1 1 3.4 6.8L3 20l1.3-3.7A8.4 8.4 0 0 1 3.5 12Z"/></svg>`;
+  const ICON_WIFI = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2.5 8.5a15 15 0 0 1 19 0"/><path d="M5.8 12.3a10.4 10.4 0 0 1 12.4 0"/><path d="M9 16a5.3 5.3 0 0 1 6 0"/><circle cx="12" cy="19.5" r="1.1" fill="currentColor" stroke="none"/></svg>`;
+  const ICON_PDF = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2.5h8l4 4V21a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-18a.5.5 0 0 1 .5-.5Z"/><path d="M14 2.5V7h4"/><path d="M8.3 17v-4h1.1a1.3 1.3 0 0 1 0 2.6H8.3M12.3 17v-4h.9a1.9 1.9 0 0 1 0 4h-.9zM17.5 13h-1.8v4M17 15h-1.3"/></svg>`;
+  const ICON_APP = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6.5" y="1.5" width="11" height="21" rx="2.3"/><path d="M10.3 19.3h3.4"/></svg>`;
+  const ICON_IMAGE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="16" rx="2.3"/><circle cx="8.3" cy="9.3" r="1.7"/><path d="m4 18 5.5-5.8a1.8 1.8 0 0 1 2.6 0L16 16.1l1.4-1.5a1.8 1.8 0 0 1 2.6 0L21.5 16"/></svg>`;
+  const ICON_VIDEO = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="14" height="14" rx="2.3"/><path d="M16.5 10.3 21 7.5v9l-4.5-2.8"/></svg>`;
+  const ICON_SOCIAL = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="12" r="2.6"/><circle cx="18" cy="5.5" r="2.6"/><circle cx="18" cy="18.5" r="2.6"/><path d="m7.7 10.7 8-3.7M7.7 13.3l8 3.7"/></svg>`;
+  const ICON_EVENT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="17" rx="2.3"/><path d="M2.5 9.5h19M7.5 2v4.5M16.5 2v4.5"/><circle cx="8.2" cy="14" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="14" r="1" fill="currentColor" stroke="none"/><circle cx="15.8" cy="14" r="1" fill="currentColor" stroke="none"/></svg>`;
+
+  const contentTypes = [
+    { id:'link', label:'Enlace', icon:ICON_LINK },
+    { id:'email', label:'E-mail', icon:ICON_MAIL },
+    { id:'call', label:'Llamada', icon:ICON_CALL },
+    { id:'whatsapp', label:'WhatsApp', icon:ICON_CHAT },
+    { id:'wifi', label:'WiFi', icon:ICON_WIFI },
+    { id:'pdf', label:'PDF', icon:ICON_PDF },
+    { id:'app', label:'App', icon:ICON_APP },
+    { id:'image', label:'Imágenes', icon:ICON_IMAGE },
+    { id:'video', label:'Video', icon:ICON_VIDEO },
+    { id:'social', label:'Redes sociales', icon:ICON_SOCIAL },
+    { id:'event', label:'Evento', icon:ICON_EVENT }
+  ];
+  const SOCIAL_BASE = {
+    instagram:'https://instagram.com/',
+    facebook:'https://facebook.com/',
+    twitter:'https://x.com/',
+    tiktok:'https://tiktok.com/@',
+    linkedin:'https://linkedin.com/in/',
+    youtube:'https://youtube.com/@'
+  };
+
+  function buildContentTypeGrid(){
+    const grid = document.getElementById('content-type-grid');
+    grid.innerHTML = '';
+    contentTypes.forEach(t => {
+      const el = document.createElement('div');
+      el.className = 'swatch type-swatch' + (t.id === contentType ? ' active' : '');
+      el.dataset.value = t.id;
+      el.innerHTML = t.icon + `<span>${t.label}</span>`;
+      el.addEventListener('click', () => setContentType(t.id));
+      grid.appendChild(el);
+    });
+  }
+  function setContentType(id){
+    contentType = id;
+    document.querySelectorAll('#content-type-grid .swatch').forEach(s => s.classList.toggle('active', s.dataset.value === id));
+    document.querySelectorAll('.content-field').forEach(f => f.classList.toggle('active', f.dataset.contentType === id));
+    scheduleGenerate();
+  }
+  buildContentTypeGrid();
+
+  const wifiEncSelect = document.getElementById('wifi-enc');
+  const wifiPasswordField = document.getElementById('wifi-password-field');
+  wifiEncSelect.addEventListener('change', () => {
+    wifiPasswordField.style.display = wifiEncSelect.value === 'nopass' ? 'none' : 'block';
+  });
+
+  document.querySelectorAll('.content-field input, .content-field select').forEach(el => {
+    el.addEventListener('input', scheduleGenerate);
+    el.addEventListener('change', scheduleGenerate);
+  });
+
+  function icsDate(value){
+    if(!value) return '';
+    return value.replace(/[-:]/g, '') + '00';
+  }
+  function composeQrData(){
+    switch(contentType){
+      case 'email': {
+        const to = document.getElementById('email-to').value.trim();
+        if(!to) return '';
+        const subject = document.getElementById('email-subject').value.trim();
+        const body = document.getElementById('email-body').value.trim();
+        const params = [];
+        if(subject) params.push('subject=' + encodeURIComponent(subject));
+        if(body) params.push('body=' + encodeURIComponent(body));
+        return 'mailto:' + to + (params.length ? '?' + params.join('&') : '');
+      }
+      case 'call': {
+        const phone = document.getElementById('call-phone').value.trim();
+        return phone ? 'tel:' + phone.replace(/[^\d+]/g, '') : '';
+      }
+      case 'whatsapp': {
+        const phone = document.getElementById('wa-phone').value.trim().replace(/[^\d]/g, '');
+        if(!phone) return '';
+        const msg = document.getElementById('wa-message').value.trim();
+        return 'https://wa.me/' + phone + (msg ? '?text=' + encodeURIComponent(msg) : '');
+      }
+      case 'wifi': {
+        const ssid = document.getElementById('wifi-ssid').value.trim();
+        if(!ssid) return '';
+        const esc = s => s.replace(/([\\;,:"])/g, '\\$1');
+        const enc = wifiEncSelect.value;
+        const pass = document.getElementById('wifi-password').value;
+        const hidden = document.getElementById('wifi-hidden').checked ? 'true' : 'false';
+        let s = `WIFI:T:${enc};S:${esc(ssid)};`;
+        if(enc !== 'nopass') s += `P:${esc(pass)};`;
+        s += `H:${hidden};;`;
+        return s;
+      }
+      case 'pdf': return document.getElementById('pdf-url').value.trim();
+      case 'app': return document.getElementById('app-url').value.trim();
+      case 'image': return document.getElementById('img-url').value.trim();
+      case 'video': return document.getElementById('video-url').value.trim();
+      case 'social': {
+        const handle = document.getElementById('social-handle').value.trim().replace(/^@/, '');
+        if(!handle) return '';
+        if(/^https?:\/\//i.test(handle)) return handle;
+        const base = SOCIAL_BASE[document.getElementById('social-platform').value] || '';
+        return base + handle;
+      }
+      case 'event': {
+        const title = document.getElementById('event-title').value.trim();
+        if(!title) return '';
+        const location = document.getElementById('event-location').value.trim();
+        const desc = document.getElementById('event-desc').value.trim();
+        const start = document.getElementById('event-start').value;
+        const end = document.getElementById('event-end').value;
+        let ics = 'BEGIN:VEVENT\n' + `SUMMARY:${title}\n`;
+        if(location) ics += `LOCATION:${location}\n`;
+        if(desc) ics += `DESCRIPTION:${desc}\n`;
+        if(start) ics += `DTSTART:${icsDate(start)}\n`;
+        if(end) ics += `DTEND:${icsDate(end)}\n`;
+        ics += 'END:VEVENT';
+        return ics;
+      }
+      case 'link':
+      default:
+        return urlInput.value.trim();
+    }
+  }
+
   /* ---------- QR generation ---------- */
   urlInput.addEventListener('input', scheduleGenerate);
   regenerateBtn.addEventListener('click', () => generate(true));
@@ -1647,7 +2028,7 @@
   }
 
   function generate(animate){
-    const text = urlInput.value.trim();
+    const text = (composeQrData() || '').trim();
     qrHolder.innerHTML = '';
     if(!text){
       emptyState.style.display = 'block';
@@ -1785,9 +2166,9 @@
     document.querySelector(`[data-solid-row="${prefix}"]`).style.display = state.mode === 'solid' ? 'flex' : 'none';
     document.querySelector(`[data-gradient-row="${prefix}"]`).classList.toggle('show', state.mode === 'gradient');
     document.querySelectorAll(`[data-color1="${prefix}"]`).forEach(i => i.value = state.color1);
-    document.querySelectorAll(`[data-hex1="${prefix}"]`).forEach(h => h.textContent = state.color1.toUpperCase());
+    document.querySelectorAll(`[data-hex1="${prefix}"]`).forEach(h => h.value = state.color1.toUpperCase());
     document.querySelectorAll(`[data-color2="${prefix}"]`).forEach(i => i.value = state.color2);
-    document.querySelectorAll(`[data-hex2="${prefix}"]`).forEach(h => h.textContent = state.color2.toUpperCase());
+    document.querySelectorAll(`[data-hex2="${prefix}"]`).forEach(h => h.value = state.color2.toUpperCase());
     const gradTypeButtons = document.querySelectorAll(`[data-gradtype-group="${prefix}"] button`);
     gradTypeButtons.forEach(b => b.classList.toggle('active', b.dataset.gradtype === state.gradType));
     document.querySelector(`[data-angle-wrap="${prefix}"]`).classList.toggle('show', state.gradType === 'linear');
@@ -1812,7 +2193,7 @@
     ['dots','csquare','cdot'].forEach(prefix => applyColorGroupState(prefix, preset.colorState[prefix]));
 
     bgColorInput.value = preset.bgColor;
-    bgHex.textContent = preset.bgColor.toUpperCase();
+    bgHex.value = preset.bgColor.toUpperCase();
 
     logoSize.value = preset.logoSize;
     logoSizeVal.textContent = preset.logoSize + '%';
@@ -1872,7 +2253,31 @@
   renderPresets();
 
   /* ---------- creative templates ---------- */
+  /* Ordenadas de mayor a menor uso habitual. Cada una con paleta, tipografía,
+     decoración y disposición ('classic' = título arriba / QR abajo,
+     'badge' = QR arriba en placa / título abajo) propias, para que ninguna
+     plantilla se sienta igual a otra. */
   const templates = [
+    {
+      id:'wifi', ambit:'WiFi', name:'Acceso WiFi',
+      bg:'#131226', bgGradient:['#0F0E24','#1B1B3A','#2A1F4D'],
+      titleColor:'#EAF6FF', subtitleColor:'#7CF2D6', accent:'#7CF2D6',
+      accentOptions:['#7CF2D6','#A78BFA','#FDE68A'],
+      titleFont:'"JetBrains Mono", monospace', subtitleFont:'"JetBrains Mono", monospace',
+      titleSize:52, subtitleSize:19,
+      defaultTitle:'WiFi gratis', defaultSubtitle:'Escanea y conéctate en segundos',
+      decoration:'signal', layout:'badge'
+    },
+    {
+      id:'social', ambit:'Redes sociales', name:'Sígueme',
+      bg:'#DD2A7B', bgGradient:['#F58529','#DD2A7B','#8134AF','#515BD4'],
+      titleColor:'#FFFFFF', subtitleColor:'#FFF3D6', accent:'#FFFFFF',
+      accentOptions:['#FFFFFF','#FFE066','#00F0FF'],
+      titleFont:'"Poppins", sans-serif', subtitleFont:'"Poppins", sans-serif',
+      titleSize:58, subtitleSize:21,
+      defaultTitle:'Sígueme', defaultSubtitle:'@tuusuario en todas las redes',
+      decoration:'orbit', layout:'badge'
+    },
     {
       id:'negocio', ambit:'Negocios', name:'Tarjeta profesional',
       bg:'#0B1F2A', bgGradient:null,
@@ -1881,17 +2286,7 @@
       titleFont:'"Playfair Display", serif', subtitleFont:'"Inter", sans-serif',
       titleSize:60, subtitleSize:22,
       defaultTitle:'Conectemos', defaultSubtitle:'Escanea para ver mi perfil profesional',
-      decoration:'lines'
-    },
-    {
-      id:'boda', ambit:'Evento · Boda', name:'Invitación romántica',
-      bg:'#F7E9E4', bgGradient:null,
-      titleColor:'#7A4B3A', subtitleColor:'#B98A73', accent:'#B98A73',
-      accentOptions:['#B98A73','#C9A227','#8E7CC3'],
-      titleFont:'"Great Vibes", cursive', subtitleFont:'"Cormorant Garamond", serif',
-      titleSize:96, subtitleSize:24,
-      defaultTitle:'Nos casamos', defaultSubtitle:'Escanea para confirmar tu asistencia',
-      decoration:'frame'
+      decoration:'lines', layout:'classic'
     },
     {
       id:'restaurante', ambit:'Restaurante', name:'Carta digital',
@@ -1899,39 +2294,89 @@
       titleColor:'#FFF8ED', subtitleColor:'#FFD9B3', accent:'#FFD9B3',
       accentOptions:['#FFD9B3','#FFFFFF','#2E7D5B'],
       titleFont:'"Oswald", sans-serif', subtitleFont:'"Inter", sans-serif',
-      titleSize:66, subtitleSize:22,
-      defaultTitle:'NUESTRO MENÚ', defaultSubtitle:'Escanea para ver la carta completa',
-      decoration:'dots'
+      titleSize:64, subtitleSize:21,
+      defaultTitle:'Nuestro menú', defaultSubtitle:'Escanea para ver la carta completa',
+      decoration:'dots', layout:'classic'
     },
     {
-      id:'social', ambit:'Redes sociales', name:'Sígueme',
-      bg:'#DD2A7B', bgGradient:['#F58529','#DD2A7B','#8134AF','#515BD4'],
-      titleColor:'#FFFFFF', subtitleColor:'#FFFFFF', accent:'#FFFFFF',
-      accentOptions:['#FFFFFF','#FFE066','#00F0FF'],
-      titleFont:'"Poppins", sans-serif', subtitleFont:'"Poppins", sans-serif',
-      titleSize:62, subtitleSize:22,
-      defaultTitle:'SÍGUENOS', defaultSubtitle:'@tuusuario en todas las redes',
-      decoration:'blob'
+      id:'evento', ambit:'Evento', name:'Entrada al evento',
+      bg:'#1D3557', bgGradient:['#1D3557','#3D6FA8'],
+      titleColor:'#FFFFFF', subtitleColor:'#FFD166', accent:'#FFD166',
+      accentOptions:['#FFD166','#EF476F','#06D6A0'],
+      titleFont:'"Bebas Neue", sans-serif', subtitleFont:'"Inter", sans-serif',
+      titleSize:78, subtitleSize:21,
+      defaultTitle:'ESTÁS INVITADO', defaultSubtitle:'Escanea para ver fecha, hora y ubicación',
+      decoration:'ticket', layout:'badge'
     },
     {
-      id:'wifi', ambit:'WiFi', name:'Acceso WiFi',
-      bg:'#0F1720', bgGradient:null,
-      titleColor:'#E6FBFF', subtitleColor:'#22D3EE', accent:'#22D3EE',
-      accentOptions:['#22D3EE','#A78BFA','#F472B6'],
-      titleFont:'"JetBrains Mono", monospace', subtitleFont:'"JetBrains Mono", monospace',
-      titleSize:50, subtitleSize:20,
-      defaultTitle:'WiFi gratis', defaultSubtitle:'Escanea y conéctate en segundos',
-      decoration:'grid'
+      id:'descuento', ambit:'Promoción', name:'Cupón de descuento',
+      bg:'#101314', bgGradient:null,
+      titleColor:'#EFFFF6', subtitleColor:'#9CFFCB', accent:'#39FF9E',
+      accentOptions:['#39FF9E','#FFE066','#FF6B6B'],
+      titleFont:'"Space Grotesk", sans-serif', subtitleFont:'"Inter", sans-serif',
+      titleSize:58, subtitleSize:20,
+      defaultTitle:'20% OFF', defaultSubtitle:'Escanea y aplica tu descuento en caja',
+      decoration:'starburst', layout:'classic'
+    },
+    {
+      id:'app', ambit:'App', name:'Descarga la app',
+      bg:'#3A0CA3', bgGradient:['#3A0CA3','#7209B7','#4361EE'],
+      titleColor:'#FFFFFF', subtitleColor:'#D6D0FF', accent:'#FFFFFF',
+      accentOptions:['#FFFFFF','#7DF9FF','#FFD166'],
+      titleFont:'"Montserrat", sans-serif', subtitleFont:'"Inter", sans-serif',
+      titleSize:54, subtitleSize:20,
+      defaultTitle:'Descarga la app', defaultSubtitle:'Disponible para iOS y Android',
+      decoration:'appgrid', layout:'badge'
+    },
+    {
+      id:'producto', ambit:'Tienda', name:'Ficha de producto',
+      bg:'#F2F0EB', bgGradient:null,
+      titleColor:'#1D1D1F', subtitleColor:'#6E6E73', accent:'#1D1D1F',
+      accentOptions:['#1D1D1F','#B5482A','#3B5F4C'],
+      titleFont:'"Inter", sans-serif', subtitleFont:'"Inter", sans-serif',
+      titleSize:50, subtitleSize:19,
+      defaultTitle:'Ver producto', defaultSubtitle:'Escanea para conocer precio y detalles',
+      decoration:'tag', layout:'classic'
     },
     {
       id:'inmobiliaria', ambit:'Inmobiliaria', name:'En venta',
       bg:'#F5F1EA', bgGradient:null,
       titleColor:'#1D1D1F', subtitleColor:'#6E6E73', accent:'#1D1D1F',
       accentOptions:['#1D1D1F','#8E6E53','#3B5F4C'],
+      titleFont:'"Merriweather", serif', subtitleFont:'"Inter", sans-serif',
+      titleSize:52, subtitleSize:19,
+      defaultTitle:'En venta', defaultSubtitle:'Escanea para ver el tour virtual',
+      decoration:'corner', layout:'classic'
+    },
+    {
+      id:'boda', ambit:'Boda', name:'Invitación romántica',
+      bg:'#F7E9E4', bgGradient:null,
+      titleColor:'#7A4B3A', subtitleColor:'#B98A73', accent:'#B98A73',
+      accentOptions:['#B98A73','#C9A227','#8E7CC3'],
+      titleFont:'"Great Vibes", cursive', subtitleFont:'"Cormorant Garamond", serif',
+      titleSize:96, subtitleSize:24,
+      defaultTitle:'Nos casamos', defaultSubtitle:'Escanea para confirmar tu asistencia',
+      decoration:'frame', layout:'classic'
+    },
+    {
+      id:'cumpleanos', ambit:'Fiesta', name:'Cumpleaños',
+      bg:'#FF6FA5', bgGradient:['#FFD166','#FF6FA5','#8A5CF6'],
+      titleColor:'#FFFFFF', subtitleColor:'#FFF3D6', accent:'#FFFFFF',
+      accentOptions:['#FFFFFF','#FFD166','#7DF9FF'],
+      titleFont:'"Dancing Script", cursive', subtitleFont:'"Inter", sans-serif',
+      titleSize:80, subtitleSize:20,
+      defaultTitle:'¡Es fiesta!', defaultSubtitle:'Escanea para confirmar tu asistencia',
+      decoration:'confetti', layout:'badge'
+    },
+    {
+      id:'portafolio', ambit:'Portafolio', name:'Portafolio / CV',
+      bg:'#0E0E10', bgGradient:null,
+      titleColor:'#F5F5F5', subtitleColor:'#8A8A93', accent:'#5CC8FF',
+      accentOptions:['#5CC8FF','#FFFFFF','#FF8A5C'],
       titleFont:'"Cormorant Garamond", serif', subtitleFont:'"Inter", sans-serif',
-      titleSize:56, subtitleSize:20,
-      defaultTitle:'EN VENTA', defaultSubtitle:'Escanea para ver el tour virtual',
-      decoration:'corner'
+      titleSize:58, subtitleSize:19,
+      defaultTitle:'Mi portafolio', defaultSubtitle:'Escanea para ver mis proyectos y CV',
+      decoration:'blueprint', layout:'classic'
     }
   ];
 
@@ -2001,7 +2446,7 @@
     return {
       title: tpl.defaultTitle,
       subtitle: tpl.defaultSubtitle,
-      qrText: urlInput.value.trim() || 'generaqr.xyz',
+      qrText: (composeQrData() || '').trim() || 'generaqr.xyz',
       titleFont: tpl.titleFont,
       subtitleFont: tpl.subtitleFont,
       titleColor: tpl.titleColor,
@@ -2020,13 +2465,13 @@
     tplTitleFontSelect.value = tplState.titleFont;
     tplSubtitleFontSelect.value = tplState.subtitleFont;
     tplBgColor.value = tplState.bgColor;
-    tplBgHex.textContent = tplState.bgColor.toUpperCase();
+    tplBgHex.value = tplState.bgColor.toUpperCase();
     tplTitleColor.value = tplState.titleColor;
-    tplTitleColorHex.textContent = tplState.titleColor.toUpperCase();
+    tplTitleColorHex.value = tplState.titleColor.toUpperCase();
     tplSubtitleColor.value = tplState.subtitleColor;
-    tplSubtitleColorHex.textContent = tplState.subtitleColor.toUpperCase();
+    tplSubtitleColorHex.value = tplState.subtitleColor.toUpperCase();
     tplAccentColor.value = tplState.accent;
-    tplAccentHex.textContent = tplState.accent.toUpperCase();
+    tplAccentHex.value = tplState.accent.toUpperCase();
     tplUseMainStyle.checked = tplState.useMainStyle;
     buildAccentQuickSwatches(currentTemplate);
   }
@@ -2077,6 +2522,90 @@
         ctx.lineWidth = 2;
         ctx.strokeRect(56,56,110,110);
         ctx.strokeRect(TPL_W-166,TPL_H-166,110,110);
+        break;
+      case 'signal':
+        // arcos concéntricos de señal, estilo radar de wifi
+        ctx.lineWidth = 3;
+        ctx.globalAlpha = 0.5;
+        for(let i=0;i<4;i++){
+          ctx.beginPath();
+          ctx.arc(TPL_W/2, 466, 60 + i*46, Math.PI*1.18, Math.PI*1.82);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 0.4;
+        for(let i=0;i<10;i++){
+          ctx.beginPath();
+          ctx.arc(70 + i*80, TPL_H-70, 2.6, 0, Math.PI*2);
+          ctx.fill();
+        }
+        break;
+      case 'orbit':
+        // puntos orbitando en anillos, look de red social moderna
+        ctx.globalAlpha = 0.5;
+        [{r:150,n:8,s:5},{r:230,n:11,s:3.4}].forEach(ring => {
+          for(let i=0;i<ring.n;i++){
+            const a = (i/ring.n)*Math.PI*2;
+            ctx.beginPath();
+            ctx.arc(TPL_W/2 + Math.cos(a)*ring.r, 460 + Math.sin(a)*ring.r, ring.s, 0, Math.PI*2);
+            ctx.fill();
+          }
+        });
+        break;
+      case 'ticket':
+        // línea perforada de boleto + muescas laterales
+        ctx.globalAlpha = 0.55;
+        ctx.setLineDash([10,10]);
+        ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.moveTo(60, 940); ctx.lineTo(TPL_W-60, 940); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.beginPath(); ctx.arc(60, 940, 16, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(TPL_W-60, 940, 16, 0, Math.PI*2); ctx.fill();
+        break;
+      case 'starburst':
+        // destello tipo etiqueta de oferta detrás del título
+        ctx.globalAlpha = 0.35;
+        ctx.translate(TPL_W/2, 300);
+        for(let i=0;i<16;i++){
+          ctx.rotate(Math.PI/8);
+          ctx.fillRect(-4, -260, 8, 130);
+        }
+        break;
+      case 'appgrid':
+        // cuadrícula de iconos de apps, esquinas redondeadas
+        ctx.globalAlpha = 0.4;
+        for(let row=0; row<3; row++){
+          for(let col=0; col<3; col++){
+            roundRect(ctx, TPL_W-260 + col*58, 70 + row*58, 42, 42, 11);
+          }
+        }
+        ctx.fill();
+        break;
+      case 'tag':
+        // etiqueta de precio punteada con "agujero"
+        ctx.globalAlpha = 0.6;
+        ctx.lineWidth = 2;
+        ctx.setLineDash([6,7]);
+        roundRect(ctx, TPL_W-230, 64, 150, 74, 14);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.beginPath(); ctx.arc(TPL_W-198, 101, 7, 0, Math.PI*2); ctx.stroke();
+        break;
+      case 'confetti':
+        // confeti de formas mixtas para fiesta/cumpleaños
+        ctx.globalAlpha = 0.6;
+        const shapes = [[70,90],[150,60],[TPL_W-90,100],[TPL_W-170,150],[120,1080],[TPL_W-100,1050],[TPL_W-200,1100],[80,1140]];
+        shapes.forEach((p,i) => {
+          if(i % 3 === 0){ ctx.beginPath(); ctx.arc(p[0], p[1], 9, 0, Math.PI*2); ctx.fill(); }
+          else if(i % 3 === 1){ ctx.save(); ctx.translate(p[0],p[1]); ctx.rotate(i); ctx.fillRect(-8,-8,16,16); ctx.restore(); }
+          else { ctx.save(); ctx.translate(p[0],p[1]); ctx.rotate(i); ctx.beginPath(); ctx.moveTo(0,-10); ctx.lineTo(9,8); ctx.lineTo(-9,8); ctx.closePath(); ctx.fill(); ctx.restore(); }
+        });
+        break;
+      case 'blueprint':
+        // cuadrícula fina tipo plano técnico, look editorial/portafolio
+        ctx.globalAlpha = 0.14;
+        ctx.lineWidth = 1;
+        for(let x=0; x<=TPL_W; x+=45){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,TPL_H); ctx.stroke(); }
+        for(let y=0; y<=TPL_H; y+=45){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(TPL_W,y); ctx.stroke(); }
         break;
     }
     ctx.restore();
@@ -2130,10 +2659,34 @@
     }, 120);
   }
 
+  function tplLayoutMetrics(tpl){
+    if(tpl.layout === 'badge'){
+      const qrSize = 300, pad = 22, qx = (TPL_W - qrSize)/2, qy = 116;
+      return {
+        qrSize, pad, qx, qy,
+        captionY: qy + qrSize + pad + 36,
+        titleY: qy + qrSize + pad + 96,
+        subtitleY: qy + qrSize + pad + 96 + Math.max(tpl.titleSize*1.05, 52) + 18,
+        titleMaxWidth: TPL_W - 140,
+        subtitleMaxWidth: TPL_W - 190
+      };
+    }
+    const qrSize = 420, pad = 28, qx = (TPL_W - qrSize)/2, qy = 420;
+    return {
+      qrSize, pad, qx, qy,
+      captionY: qy + qrSize + pad + 42,
+      titleY: 190,
+      subtitleY: 268,
+      titleMaxWidth: TPL_W - 160,
+      subtitleMaxWidth: TPL_W - 220
+    };
+  }
+
   function renderTemplate(){
     if(!currentTemplate) return;
     const token = ++tplRenderToken;
     const tpl = currentTemplate;
+    const m = tplLayoutMetrics(tpl);
 
     loadTemplateFonts().then(() => {
       if(token !== tplRenderToken) return;
@@ -2153,17 +2706,17 @@
       tplCtx.textAlign = 'center';
       tplCtx.fillStyle = tplState.titleColor;
       tplCtx.font = `800 ${tpl.titleSize}px ${tplState.titleFont}`;
-      wrapText(tplCtx, tplState.title || tpl.defaultTitle, TPL_W/2, 190, TPL_W-160, tpl.titleSize*1.05);
+      wrapText(tplCtx, tplState.title || tpl.defaultTitle, TPL_W/2, m.titleY, m.titleMaxWidth, tpl.titleSize*1.05);
 
       tplCtx.fillStyle = tplState.subtitleColor;
       tplCtx.font = `500 ${tpl.subtitleSize}px ${tplState.subtitleFont}`;
       tplCtx.globalAlpha = 0.92;
-      wrapText(tplCtx, tplState.subtitle || tpl.defaultSubtitle, TPL_W/2, 268, TPL_W-220, tpl.subtitleSize*1.4);
+      wrapText(tplCtx, tplState.subtitle || tpl.defaultSubtitle, TPL_W/2, m.subtitleY, m.subtitleMaxWidth, tpl.subtitleSize*1.4);
       tplCtx.globalAlpha = 1;
 
       renderTemplateQR((qrCanvas) => {
         if(token !== tplRenderToken || !qrCanvas) return;
-        const qrSize = 420, qx = (TPL_W - qrSize)/2, qy = 420, pad = 28;
+        const { qrSize, qx, qy, pad } = m;
         tplCtx.save();
         tplCtx.shadowColor = 'rgba(0,0,0,0.18)';
         tplCtx.shadowBlur = 30;
@@ -2174,11 +2727,41 @@
         tplCtx.restore();
         tplCtx.drawImage(qrCanvas, qx, qy, qrSize, qrSize);
 
+        // Bug fix: cuando "usar el mismo diseño del Diseñador" está activo y hay
+        // un logo subido, el logo se dibuja también aquí sobre el QR de la plantilla
+        // (antes no se dibujaba en absoluto y parecía que la imagen "desaparecía").
+        if(tplState.useMainStyle && logoImage){
+          const pct = parseInt(logoSize.value, 10) / 100;
+          const logoMax = qrSize * pct;
+          let logoW, logoH;
+          if(logoImage.width >= logoImage.height){
+            logoW = logoMax; logoH = logoMax * (logoImage.height / logoImage.width);
+          } else {
+            logoH = logoMax; logoW = logoMax * (logoImage.width / logoImage.height);
+          }
+          const padPct = parseInt(logoPadding.value, 10) / 100;
+          const badgeSize = logoMax + logoMax * padPct;
+          const cx = qx + qrSize/2, cy = qy + qrSize/2;
+          const bx = cx - badgeSize/2, by = cy - badgeSize/2;
+          if(logoBgShape !== 'none'){
+            tplCtx.fillStyle = '#ffffff';
+            if(logoBgShape === 'circle'){
+              tplCtx.beginPath(); tplCtx.arc(cx, cy, badgeSize/2, 0, Math.PI*2); tplCtx.fill();
+            } else if(logoBgShape === 'square'){
+              tplCtx.fillRect(bx, by, badgeSize, badgeSize);
+            } else {
+              roundRect(tplCtx, bx, by, badgeSize, badgeSize, badgeSize*0.22);
+              tplCtx.fill();
+            }
+          }
+          tplCtx.drawImage(logoImage, cx - logoW/2, cy - logoH/2, logoW, logoH);
+        }
+
         tplCtx.fillStyle = tplState.subtitleColor;
         tplCtx.font = `600 16px "Inter"`;
         tplCtx.textAlign = 'center';
         tplCtx.globalAlpha = 0.85;
-        tplCtx.fillText('ESCANEA CON LA CÁMARA', TPL_W/2, qy+qrSize+pad+42);
+        tplCtx.fillText('ESCANEA CON LA CÁMARA', TPL_W/2, m.captionY);
         tplCtx.globalAlpha = 1;
 
         tplDownloadBtn.disabled = false;
@@ -2198,7 +2781,7 @@
         el.classList.add('active');
         tplState.accent = color;
         tplAccentColor.value = color;
-        tplAccentHex.textContent = color.toUpperCase();
+        tplAccentHex.value = color.toUpperCase();
         renderTemplate();
       });
       tplAccentGroup.appendChild(el);
@@ -2237,22 +2820,22 @@
   tplBgColor.addEventListener('input', () => {
     tplState.bgColor = tplBgColor.value;
     tplState.bgGradient = null;
-    tplBgHex.textContent = tplBgColor.value.toUpperCase();
+    tplBgHex.value = tplBgColor.value.toUpperCase();
     scheduleTplRender();
   });
   tplTitleColor.addEventListener('input', () => {
     tplState.titleColor = tplTitleColor.value;
-    tplTitleColorHex.textContent = tplTitleColor.value.toUpperCase();
+    tplTitleColorHex.value = tplTitleColor.value.toUpperCase();
     scheduleTplRender();
   });
   tplSubtitleColor.addEventListener('input', () => {
     tplState.subtitleColor = tplSubtitleColor.value;
-    tplSubtitleColorHex.textContent = tplSubtitleColor.value.toUpperCase();
+    tplSubtitleColorHex.value = tplSubtitleColor.value.toUpperCase();
     scheduleTplRender();
   });
   tplAccentColor.addEventListener('input', () => {
     tplState.accent = tplAccentColor.value;
-    tplAccentHex.textContent = tplAccentColor.value.toUpperCase();
+    tplAccentHex.value = tplAccentColor.value.toUpperCase();
     tplAccentGroup.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
     scheduleTplRender();
   });
