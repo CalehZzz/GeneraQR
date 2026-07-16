@@ -434,6 +434,10 @@
   }
   .crop-stage:active{cursor:grabbing;}
   #crop-canvas{display:block;width:100%;height:100%;}
+  .bg-remove-row{max-width:280px;margin:14px auto 0;display:flex;}
+  .bg-remove-row .pill-btn{width:100%;}
+  .bg-remove-row .pill-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+  #bg-remove-field{max-width:280px;margin:12px auto 0;}
   .crop-controls{max-width:280px;margin:14px auto 0;}
   .crop-actions{display:flex;gap:10px;max-width:280px;margin:14px auto 0;}
 
@@ -1143,6 +1147,15 @@
           <div class="crop-stage">
             <canvas id="crop-canvas" width="320" height="320"></canvas>
           </div>
+          <div class="bg-remove-row">
+            <button type="button" class="pill-btn" id="bg-remove-toggle">✂️ Quitar fondo de la imagen</button>
+          </div>
+          <div class="field" id="bg-remove-field" style="display:none;">
+            <label class="field-label">Sensibilidad</label>
+            <input type="range" id="bg-remove-tolerance" min="5" max="60" value="25">
+            <div class="range-label"><span>Solo el fondo</span><span id="bg-remove-tolerance-val">25%</span><span>Más agresivo</span></div>
+            <div class="eyedrop-hint">Detecta el color de las esquinas de la imagen y lo vuelve transparente. Funciona mejor con fondos de un solo color.</div>
+          </div>
           <div class="crop-controls">
             <label class="field-label">Acercar</label>
             <input type="range" id="crop-zoom" min="100" max="300" value="100">
@@ -1163,7 +1176,7 @@
         <div class="field" id="logo-color-field" style="display:none;margin-top:16px;">
           <label class="field-label">Color del QR desde la imagen</label>
           <canvas id="logo-color-canvas" width="240" height="240"></canvas>
-          <div class="eyedrop-hint">💧 Toca la imagen para usar ese color en los puntos</div>
+          <div class="eyedrop-hint">💧 Toca la imagen para usar ese color en todo el QR</div>
         </div>
 
         <div class="field" id="logo-size-field" style="display:none;">
@@ -1174,14 +1187,16 @@
         </div>
 
         <div class="field" id="logo-padding-field" style="display:none;">
-          <label class="field-label">Espacio del fondo alrededor del logo</label>
-          <input type="range" id="logo-padding" min="10" max="60" value="25">
-          <div class="range-label"><span>Logo ajustado</span><span id="logo-padding-val">25%</span><span>Logo pequeño</span></div>
+          <label class="field-label">Tamaño del fondo del logo</label>
+          <input type="range" id="logo-padding" min="15" max="50" value="20">
+          <div class="range-label"><span>Compacto</span><span id="logo-padding-val">20% del QR</span><span>Grande</span></div>
+          <div class="contrast-warning" id="logo-padding-warning">⚠ A este tamaño el QR puede fallar al escanear — pruébalo antes de usarlo</div>
         </div>
 
         <div class="field" id="logo-bg-field" style="display:none;">
           <label class="field-label">Forma del fondo del logo</label>
           <div class="swatch-grid cols-2" id="logo-bg-group"></div>
+          <div class="eyedrop-hint">Elige "Sin fondo" para que el logo quede directamente sobre el QR, sin ninguna forma detrás.</div>
         </div>
       </div>
       </div>
@@ -1433,6 +1448,10 @@
   const cropZoomSlider = document.getElementById('crop-zoom');
   const cropConfirmBtn = document.getElementById('crop-confirm');
   const cropCancelBtn = document.getElementById('crop-cancel');
+  const bgRemoveToggle = document.getElementById('bg-remove-toggle');
+  const bgRemoveField = document.getElementById('bg-remove-field');
+  const bgRemoveTolerance = document.getElementById('bg-remove-tolerance');
+  const bgRemoveToleranceVal = document.getElementById('bg-remove-tolerance-val');
 
   const logoColorField = document.getElementById('logo-color-field');
   const logoColorCanvas = document.getElementById('logo-color-canvas');
@@ -1443,6 +1462,7 @@
   const logoPaddingField = document.getElementById('logo-padding-field');
   const logoPadding = document.getElementById('logo-padding');
   const logoPaddingVal = document.getElementById('logo-padding-val');
+  const logoPaddingWarning = document.getElementById('logo-padding-warning');
   const logoBgField = document.getElementById('logo-bg-field');
   const logoBgGroup = document.getElementById('logo-bg-group');
 
@@ -1496,11 +1516,35 @@
 
   /* ---------- state ---------- */
   let logoImage = null;      // final cropped image used on the QR
-  let originalImage = null;  // raw uploaded image, kept for re-cropping
+  let originalImage = null;  // image currently used for cropping (raw or bg-removed)
+  let rawOriginalImage = null; // untouched uploaded image, kept to toggle bg removal on/off
+  let bgRemoveActive = false;
   let finalCanvas = null;
   let debounceTimer = null;
   let targetSize = 1024;
   let logoBgShape = 'rounded';
+
+  // Espera a que QRCodeStyling termine de pintar su <canvas>. La librería lo
+  // dibuja de forma asíncrona (no está listo apenas se llama a .append()), así
+  // que se necesita un margen mínimo antes de leerlo — si se lee demasiado
+  // pronto se copia un canvas en blanco y el QR "desaparece". Se mantiene el
+  // mismo tiempo de espera que ya funcionaba, con un pequeño sondeo extra por
+  // si en algún dispositivo tarda más.
+  function waitForCanvas(container, cb){
+    setTimeout(() => {
+      const c = container.querySelector('canvas');
+      if(c){ cb(c); return; }
+      // fallback: sigue esperando un poco más si aún no está listo
+      let attempts = 0;
+      const poll = () => {
+        const c2 = container.querySelector('canvas');
+        if(c2 || attempts > 20){ cb(c2); return; }
+        attempts++;
+        setTimeout(poll, 50);
+      };
+      poll();
+    }, 120);
+  }
   let contentType = 'link';
 
   const dotsTypes = [
@@ -1571,7 +1615,9 @@
   );
   buildTypeGrid(
     document.getElementById('logo-bg-group'), logoBgShapes,
-    (item) => `<div class="corner-icon"><div class="frame frame-square" style="border-width:0;background:currentColor;opacity:0.18;border-radius:${item.value==='circle'?'50%':item.value==='square'?'2px':item.value==='none'?'0':'30%'};"></div></div>`,
+    (item) => item.value === 'none'
+      ? `<div class="corner-icon"><div style="position:absolute;inset:4px;border:2px dashed currentColor;opacity:0.55;border-radius:4px;"></div><div style="position:absolute;top:50%;left:50%;width:150%;height:2px;background:currentColor;opacity:0.55;transform:translate(-50%,-50%) rotate(45deg);"></div></div>`
+      : `<div class="corner-icon"><div class="frame frame-square" style="border-width:0;background:currentColor;opacity:0.18;border-radius:${item.value==='circle'?'50%':item.value==='square'?'2px':'30%'};"></div></div>`,
     (v) => { logoBgShape = v; checkLogoSafety(); }, logoBgShape
   );
 
@@ -1763,12 +1809,74 @@
     reader.onload = (ev) => {
       const img = new Image();
       img.onload = () => {
+        rawOriginalImage = img;
         originalImage = img;
+        bgRemoveActive = false;
+        bgRemoveToggle.classList.remove('active');
+        bgRemoveToggle.textContent = '✂️ Quitar fondo de la imagen';
+        bgRemoveField.style.display = 'none';
         openCropper();
       };
       img.src = ev.target.result;
     };
     reader.readAsDataURL(file);
+  });
+
+  // Quita el fondo de la imagen subida: toma el color promedio de sus 4
+  // esquinas (asumiendo que ahí está el fondo) y vuelve transparente todo
+  // pixel de un color parecido, con un borde suavizado para que no quede
+  // dentado. Funciona directamente sobre la imagen original (no la recortada)
+  // para que el resultado se vea bien sin importar el zoom o la posición.
+  function removeBackgroundFromImage(img, tolerancePct){
+    const c = document.createElement('canvas');
+    c.width = img.width; c.height = img.height;
+    const cx = c.getContext('2d');
+    cx.drawImage(img, 0, 0);
+    const imgData = cx.getImageData(0, 0, c.width, c.height);
+    const d = imgData.data;
+    const sampleAt = (x, y) => {
+      const i = (y * c.width + x) * 4;
+      return [d[i], d[i+1], d[i+2]];
+    };
+    const corners = [sampleAt(0,0), sampleAt(c.width-1,0), sampleAt(0,c.height-1), sampleAt(c.width-1,c.height-1)];
+    const bg = [0,1,2].map(ch => Math.round(corners.reduce((s,p) => s + p[ch], 0) / 4));
+    const maxDist = Math.sqrt(3 * 255 * 255);
+    const threshold = (tolerancePct / 100) * maxDist;
+    const inner = threshold * 0.7, outer = threshold * 1.15;
+    for(let i = 0; i < d.length; i += 4){
+      const dr = d[i] - bg[0], dg = d[i+1] - bg[1], db = d[i+2] - bg[2];
+      const dist = Math.sqrt(dr*dr + dg*dg + db*db);
+      if(dist <= inner){
+        d[i+3] = 0;
+      } else if(dist < outer){
+        d[i+3] = Math.round(d[i+3] * ((dist - inner) / (outer - inner)));
+      }
+    }
+    cx.putImageData(imgData, 0, 0);
+    return c;
+  }
+
+  function applyBgRemovalState(){
+    if(!rawOriginalImage) return;
+    if(bgRemoveActive){
+      originalImage = removeBackgroundFromImage(rawOriginalImage, parseInt(bgRemoveTolerance.value, 10));
+    } else {
+      originalImage = rawOriginalImage;
+    }
+    clampCropOffsets();
+    drawCrop();
+  }
+
+  bgRemoveToggle.addEventListener('click', () => {
+    bgRemoveActive = !bgRemoveActive;
+    bgRemoveToggle.classList.toggle('active', bgRemoveActive);
+    bgRemoveToggle.textContent = bgRemoveActive ? '✓ Fondo quitado' : '✂️ Quitar fondo de la imagen';
+    bgRemoveField.style.display = bgRemoveActive ? 'block' : 'none';
+    applyBgRemovalState();
+  });
+  bgRemoveTolerance.addEventListener('input', () => {
+    bgRemoveToleranceVal.textContent = bgRemoveTolerance.value + '%';
+    if(bgRemoveActive) applyBgRemovalState();
   });
 
   function openCropper(){
@@ -1874,6 +1982,11 @@
   logoRemoveBtn.addEventListener('click', () => {
     logoImage = null;
     originalImage = null;
+    rawOriginalImage = null;
+    bgRemoveActive = false;
+    bgRemoveToggle.classList.remove('active');
+    bgRemoveToggle.textContent = '✂️ Quitar fondo de la imagen';
+    bgRemoveField.style.display = 'none';
     logoInput.value = '';
     logoPreview.classList.remove('show');
     cropSection.classList.remove('show');
@@ -1896,6 +2009,28 @@
   }
   function rgbToHex(r,g,b){ return '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join(''); }
 
+  // Aplica un color sólido a las 3 partes del QR (puntos, esquinas y centro de
+  // esquinas), forzando el modo "Sólido" en cada una y sincronizando toda la UI
+  // (pickers, campos hex y botones de modo) para que quede consistente.
+  function setQrColorEverywhere(hex){
+    ['dots','csquare','cdot'].forEach(prefix => {
+      colorState[prefix].mode = 'solid';
+      colorState[prefix].color1 = hex;
+
+      const modeButtons = document.querySelectorAll(`[data-mode-group="${prefix}"] button`);
+      modeButtons.forEach(b => b.classList.toggle('active', b.dataset.mode === 'solid'));
+
+      const solidRow = document.querySelector(`[data-solid-row="${prefix}"]`);
+      if(solidRow) solidRow.style.display = 'flex';
+      const gradientRow = document.querySelector(`[data-gradient-row="${prefix}"]`);
+      if(gradientRow) gradientRow.classList.remove('show');
+
+      document.querySelectorAll(`[data-color1="${prefix}"]`).forEach(i => i.value = hex);
+      document.querySelectorAll(`[data-hex1="${prefix}"]`).forEach(h => h.value = hex.toUpperCase());
+    });
+    checkContrast();
+  }
+
   logoColorCanvas.addEventListener('click', (e) => {
     const ctx = logoColorCanvas.getContext('2d');
     const rect = logoColorCanvas.getBoundingClientRect();
@@ -1905,33 +2040,30 @@
     try{ pixel = ctx.getImageData(x, y, 1, 1).data; } catch(err){ return; }
     if(pixel[3] === 0) return;
     const hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
-    colorState.dots.color1 = hex;
-    document.querySelectorAll(`[data-color1="dots"]`).forEach(i => i.value = hex);
-    document.querySelectorAll(`[data-hex1="dots"]`).forEach(h => h.value = hex.toUpperCase());
-    checkContrast();
+    setQrColorEverywhere(hex);
     logoColorCanvas.classList.add('picked');
     setTimeout(() => logoColorCanvas.classList.remove('picked'), 400);
     scheduleGenerate();
   });
 
-  // El "fondo" (badge) del logo se calcula sobre un tamaño de logo de referencia
-  // fijo, NO sobre el valor actual del slider de tamaño del logo. Así, mover el
-  // slider "Tamaño del logo" no cambia el tamaño del fondo, y viceversa.
-  // Solo si el logo llega a ser más grande que el fondo (para evitar que el logo
-  // se salga del fondo) el fondo crece lo mínimo necesario para contenerlo.
-  const BADGE_REFERENCE_LOGO_PCT = 15; // = valor por defecto del slider "logo-size"
-  function computeBadgeSize(baseSize, logoMax, padPct){
-    const referenceLogoMax = baseSize * (BADGE_REFERENCE_LOGO_PCT / 100);
-    const badgeSize = referenceLogoMax + referenceLogoMax * padPct;
-    return Math.max(badgeSize, logoMax);
+  // El "fondo" (badge) del logo ahora es un tamaño directo e independiente,
+  // expresado como % del QR (slider "logo-padding" ya NO es relativo al logo).
+  // Así, mover "Tamaño del logo" nunca cambia el fondo y viceversa. Su único
+  // límite real es el riesgo de que el QR falle al escanear, señalado con un
+  // aviso — el usuario decide qué tan grande lo deja.
+  // La única excepción es una salvaguarda mínima: si el logo llega a ser más
+  // grande que el fondo elegido, el fondo crece lo justo para no dejarlo fuera.
+  function computeBadgeSize(baseSize, logoMax, badgePct){
+    return Math.max(baseSize * badgePct, logoMax);
   }
 
   function checkLogoSafety(){
     const size = parseInt(logoSize.value, 10);
-    const pad = parseInt(logoPadding.value, 10);
-    const covered = size * (1 + pad / 100);
-    const risky = covered >= 26 || (logoBgShape === 'none' && size >= 14);
+    const badgePct = parseInt(logoPadding.value, 10);
+    const covered = logoBgShape === 'none' ? size : Math.max(size, badgePct);
+    const risky = covered >= 30;
     logoSizeWarning.classList.toggle('show', !!logoImage && risky);
+    logoPaddingWarning.classList.toggle('show', !!logoImage && risky && logoBgShape !== 'none');
   }
   logoSize.addEventListener('input', () => {
     logoSizeVal.textContent = logoSize.value + '%';
@@ -1939,7 +2071,7 @@
     scheduleGenerate();
   });
   logoPadding.addEventListener('input', () => {
-    logoPaddingVal.textContent = logoPadding.value + '%';
+    logoPaddingVal.textContent = logoPadding.value + '% del QR';
     checkLogoSafety();
     scheduleGenerate();
   });
@@ -2096,7 +2228,7 @@
 
   function scheduleGenerate(){
     clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => generate(true), 350);
+    debounceTimer = setTimeout(() => generate(true), 150);
   }
 
   function generate(animate){
@@ -2129,8 +2261,7 @@
     });
     qrObj.append(hiddenDiv);
 
-    setTimeout(() => {
-      const sourceCanvas = hiddenDiv.querySelector('canvas');
+    waitForCanvas(hiddenDiv, (sourceCanvas) => {
       if(!sourceCanvas){ document.body.removeChild(hiddenDiv); return; }
 
       const outCanvas = document.createElement('canvas');
@@ -2187,7 +2318,7 @@
       }
 
       document.body.removeChild(hiddenDiv);
-    }, 120);
+    });
   }
 
   downloadBtn.addEventListener('click', () => {
@@ -2270,7 +2401,7 @@
     logoSize.value = preset.logoSize;
     logoSizeVal.textContent = preset.logoSize + '%';
     logoPadding.value = preset.logoPadding;
-    logoPaddingVal.textContent = preset.logoPadding + '%';
+    logoPaddingVal.textContent = preset.logoPadding + '% del QR';
 
     targetSize = preset.targetSize;
     sizeGroup.querySelectorAll('button').forEach(b => b.classList.toggle('active', parseInt(b.dataset.size,10) === targetSize));
@@ -2724,11 +2855,10 @@
       backgroundOptions: { color: '#ffffff' }
     }, buildTemplateQrOptions()));
     qrObj.append(hiddenDiv);
-    setTimeout(() => {
-      const c = hiddenDiv.querySelector('canvas');
+    waitForCanvas(hiddenDiv, (c) => {
       cb(c);
       document.body.removeChild(hiddenDiv);
-    }, 120);
+    });
   }
 
   function tplLayoutMetrics(tpl){
@@ -2840,7 +2970,7 @@
       });
     });
   }
-  function scheduleTplRender(){ clearTimeout(tplDebounce); tplDebounce = setTimeout(renderTemplate, 250); }
+  function scheduleTplRender(){ clearTimeout(tplDebounce); tplDebounce = setTimeout(renderTemplate, 120); }
 
   function buildAccentQuickSwatches(tpl){
     tplAccentGroup.innerHTML = '';
