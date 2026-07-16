@@ -482,7 +482,31 @@
     border-radius:28px;
     padding:32px;
     box-shadow:var(--shadow-lg);
+    display:flex;flex-direction:column;align-items:center;
+  }
+  .preview-toggle{
+    width:100%;
+    background:none;border:none;padding:0;margin:0;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:6px;
+    font-family:inherit;font-size:13px;font-weight:700;color:var(--text-dim);
+    letter-spacing:0.01em;
+  }
+  .preview-toggle .chev{transition:transform .2s ease;flex-shrink:0;}
+  .preview-card.collapsed .preview-toggle .chev,
+  .tpl-canvas-wrap.collapsed .preview-toggle .chev{transform:rotate(-90deg);}
+  .preview-body{
+    width:100%;
     display:flex;flex-direction:column;align-items:center;gap:22px;
+    overflow:hidden;
+    max-height:600px;
+    opacity:1;
+    margin-top:18px;
+    transition:max-height .28s ease, opacity .2s ease, margin-top .28s ease;
+  }
+  .preview-card.collapsed .preview-body{
+    max-height:0;
+    opacity:0;
+    margin-top:0;
   }
   .qr-stage{
     width:100%;max-width:300px;aspect-ratio:1/1;
@@ -668,6 +692,18 @@
     position:sticky;
     top:24px;
   }
+  .tpl-canvas-wrap .preview-toggle{margin-bottom:16px;}
+  .tpl-canvas-body{
+    overflow:hidden;
+    max-height:900px;
+    opacity:1;
+    transition:max-height .28s ease, opacity .2s ease, margin-top .28s ease;
+  }
+  .tpl-canvas-wrap.collapsed .tpl-canvas-body{
+    max-height:0;
+    opacity:0;
+  }
+  .tpl-canvas-wrap.collapsed .preview-toggle{margin-bottom:0;}
   .tpl-canvas-wrap canvas{
     width:100%;
     max-width:420px;
@@ -1180,18 +1216,24 @@
     </div>
 
     <div class="preview-panel">
-      <div class="preview-card">
-        <div class="qr-stage">
-          <div id="qr-canvas-holder"></div>
-          <div class="empty-state" id="empty-state">Esperando contenido…</div>
-        </div>
-        <div class="actions">
-          <button class="ghost" id="regenerate-btn">Regenerar</button>
-          <button class="primary" id="download-btn" disabled>Descargar PNG</button>
-        </div>
-        <div class="meta-row">
-          <span id="meta-size">—</span>
-          <span id="meta-correction">Corrección: H</span>
+      <div class="preview-card" id="preview-card">
+        <button type="button" class="preview-toggle" id="preview-toggle" aria-expanded="true" aria-controls="preview-body">
+          <span>Vista previa</span>
+          <svg class="chev" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="preview-body" id="preview-body">
+          <div class="qr-stage">
+            <div id="qr-canvas-holder"></div>
+            <div class="empty-state" id="empty-state">Esperando contenido…</div>
+          </div>
+          <div class="actions">
+            <button class="ghost" id="regenerate-btn">Regenerar</button>
+            <button class="primary" id="download-btn" disabled>Descargar PNG</button>
+          </div>
+          <div class="meta-row">
+            <span id="meta-size">—</span>
+            <span id="meta-correction">Corrección: H</span>
+          </div>
         </div>
       </div>
     </div>
@@ -1212,8 +1254,14 @@
     <div class="tpl-editor" id="tpl-editor">
       <button type="button" class="ghost tpl-back-btn" id="tpl-back-btn">← Volver a plantillas</button>
       <div class="tpl-editor-grid">
-        <div class="tpl-canvas-wrap">
-          <canvas id="tpl-canvas" width="900" height="1200"></canvas>
+        <div class="tpl-canvas-wrap" id="tpl-canvas-wrap">
+          <button type="button" class="preview-toggle" id="tpl-preview-toggle" aria-expanded="true" aria-controls="tpl-canvas-body">
+            <span>Vista previa</span>
+            <svg class="chev" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="tpl-canvas-body" id="tpl-canvas-body">
+            <canvas id="tpl-canvas" width="900" height="1200"></canvas>
+          </div>
         </div>
         <div class="tpl-controls">
 
@@ -1403,6 +1451,18 @@
   const emptyState = document.getElementById('empty-state');
   const downloadBtn = document.getElementById('download-btn');
   const regenerateBtn = document.getElementById('regenerate-btn');
+
+  function wireCollapsibleToggle(toggleId, panelEl){
+    const toggle = document.getElementById(toggleId);
+    if(!toggle || !panelEl) return;
+    toggle.addEventListener('click', () => {
+      panelEl.classList.toggle('collapsed');
+      const collapsed = panelEl.classList.contains('collapsed');
+      toggle.setAttribute('aria-expanded', String(!collapsed));
+    });
+  }
+  wireCollapsibleToggle('preview-toggle', document.getElementById('preview-card'));
+  wireCollapsibleToggle('tpl-preview-toggle', document.getElementById('tpl-canvas-wrap'));
   const metaSize = document.getElementById('meta-size');
 
   const presetNameInput = document.getElementById('preset-name-input');
@@ -1714,7 +1774,7 @@
   function openCropper(){
     cropZoom = 1;
     cropZoomSlider.value = 100;
-    cropBaseScale = Math.max(CROP_SIZE / originalImage.width, CROP_SIZE / originalImage.height);
+    cropBaseScale = Math.min(CROP_SIZE / originalImage.width, CROP_SIZE / originalImage.height);
     centerCrop();
     drawCrop();
     cropSection.classList.add('show');
@@ -1805,7 +1865,7 @@
   logoEditBtn.addEventListener('click', () => {
     if(!originalImage) return;
     logoPreview.classList.remove('show');
-    cropBaseScale = Math.max(CROP_SIZE / originalImage.width, CROP_SIZE / originalImage.height);
+    cropBaseScale = Math.min(CROP_SIZE / originalImage.width, CROP_SIZE / originalImage.height);
     clampCropOffsets();
     drawCrop();
     cropSection.classList.add('show');
@@ -1853,6 +1913,18 @@
     setTimeout(() => logoColorCanvas.classList.remove('picked'), 400);
     scheduleGenerate();
   });
+
+  // El "fondo" (badge) del logo se calcula sobre un tamaño de logo de referencia
+  // fijo, NO sobre el valor actual del slider de tamaño del logo. Así, mover el
+  // slider "Tamaño del logo" no cambia el tamaño del fondo, y viceversa.
+  // Solo si el logo llega a ser más grande que el fondo (para evitar que el logo
+  // se salga del fondo) el fondo crece lo mínimo necesario para contenerlo.
+  const BADGE_REFERENCE_LOGO_PCT = 15; // = valor por defecto del slider "logo-size"
+  function computeBadgeSize(baseSize, logoMax, padPct){
+    const referenceLogoMax = baseSize * (BADGE_REFERENCE_LOGO_PCT / 100);
+    const badgeSize = referenceLogoMax + referenceLogoMax * padPct;
+    return Math.max(badgeSize, logoMax);
+  }
 
   function checkLogoSafety(){
     const size = parseInt(logoSize.value, 10);
@@ -2077,7 +2149,7 @@
           logoH = logoMax; logoW = logoMax * (logoImage.width / logoImage.height);
         }
         const padPct = parseInt(logoPadding.value, 10) / 100;
-        const badgeSize = logoMax + logoMax * padPct;
+        const badgeSize = computeBadgeSize(targetSize, logoMax, padPct);
         const bx = (targetSize - badgeSize) / 2;
         const by = (targetSize - badgeSize) / 2;
 
@@ -2740,7 +2812,7 @@
             logoH = logoMax; logoW = logoMax * (logoImage.width / logoImage.height);
           }
           const padPct = parseInt(logoPadding.value, 10) / 100;
-          const badgeSize = logoMax + logoMax * padPct;
+          const badgeSize = computeBadgeSize(qrSize, logoMax, padPct);
           const cx = qx + qrSize/2, cy = qy + qrSize/2;
           const bx = cx - badgeSize/2, by = cy - badgeSize/2;
           if(logoBgShape !== 'none'){
