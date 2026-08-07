@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Redirigiendo… · GeneraQR</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0A84FF">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230A84FF'/%3E%3Crect x='20' y='20' width='22' height='22' rx='4' fill='white'/%3E%3Crect x='58' y='20' width='22' height='22' rx='4' fill='white'/%3E%3Crect x='20' y='58' width='22' height='22' rx='4' fill='white'/%3E%3Crect x='62' y='62' width='14' height='14' rx='3' fill='white'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#F5F5F7; --text:#1D1D1F; --text-dim:#6E6E73;
+    --accent:#0A84FF; --surface:#fff; --border:#E5E5EA;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;min-height:100%;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    background:var(--bg); color:var(--text);
+    display:flex; align-items:center; justify-content:center;
+    min-height:100vh; padding:24px;
+  }
+  body.is-error .spinner{display:none;}
+  .card{
+    background:var(--surface); border-radius:22px;
+    padding:36px 28px; max-width:420px; width:100%;
+    text-align:center;
+    box-shadow:0 2px 8px rgba(0,0,0,.04), 0 10px 30px rgba(0,0,0,.06);
+  }
+  .brand{font-weight:800; font-size:15px; color:var(--accent); letter-spacing:-0.01em; margin-bottom:18px;}
+  h1{font-size:22px; margin:0 0 8px; letter-spacing:-0.02em;}
+  p{margin:0; color:var(--text-dim); font-size:14px; line-height:1.5; word-break:break-word;}
+  .spinner{
+    width:36px; height:36px; margin:0 auto 18px;
+    border:3px solid var(--border); border-top-color:var(--accent);
+    border-radius:50%; animation:spin .7s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  a.home{
+    display:inline-block; margin-top:20px; color:var(--accent);
+    font-weight:600; font-size:14px; text-decoration:none;
+  }
+  a.home:hover{text-decoration:underline;}
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand">GeneraQR</div>
+    <div class="spinner" aria-hidden="true"></div>
+    <h1 id="redirect-status">Redirigiendo…</h1>
+    <p id="redirect-detail">Un momento.</p>
+    <a class="home" id="redirect-home" href="/" hidden>Volver a GeneraQR</a>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="./firebase-config.js"></script>
+  <script src="./js/generaqr-firebase.js"></script>
+  <script src="./js/redirect.js"></script>
+</body>
+</html>
