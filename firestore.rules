@@ -1,0 +1,84 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(ownerId) {
+      return isSignedIn() && request.auth.uid == ownerId;
+    }
+
+    function isValidUrl(url) {
+      return url is string
+        && url.size() > 3
+        && url.size() < 2048
+        && (url.matches('https?://.*') || url.matches('mailto:.*') || url.matches('tel:.*'));
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create, update: if isOwner(userId)
+        && request.resource.data.keys().hasOnly(['email', 'displayName', 'photoURL', 'createdAt', 'updatedAt']);
+    }
+
+    match /dynamicQrs/{qrId} {
+      // Lectura pública: la página de redirección necesita targetUrl y currentVersionId
+      allow get: if true;
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+
+      allow create: if isSignedIn()
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.keys().hasAll([
+          'ownerId', 'title', 'targetUrl', 'currentVersionId',
+          'createdAt', 'updatedAt', 'active'
+        ])
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 80
+        && isValidUrl(request.resource.data.targetUrl)
+        && request.resource.data.active == true;
+
+      allow update: if isOwner(resource.data.ownerId)
+        && request.resource.data.ownerId == resource.data.ownerId
+        && (!('targetUrl' in request.resource.data)
+            || isValidUrl(request.resource.data.targetUrl));
+
+      allow delete: if isOwner(resource.data.ownerId);
+
+      match /versions/{versionId} {
+        allow get: if true;
+        allow list: if isSignedIn()
+          && resource.data.ownerId == request.auth.uid;
+
+        allow create: if isSignedIn()
+          && request.resource.data.ownerId == request.auth.uid
+          && request.resource.data.keys().hasAll([
+            'ownerId', 'targetUrl', 'createdAt', 'endedAt', 'scansTotal', 'dailyCounts', 'lastScanAt'
+          ])
+          && isValidUrl(request.resource.data.targetUrl)
+          && request.resource.data.scansTotal == 0;
+
+        // El dueño puede cerrar/editar metadatos de la versión.
+        // Cualquiera puede actualizar SOLO contadores de escaneo (página de redirección).
+        allow update: if (
+            isSignedIn()
+            && resource.data.ownerId == request.auth.uid
+            && request.resource.data.ownerId == resource.data.ownerId
+          ) || (
+            // Escaneo anónimo: solo tocar campos de stats
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['scansTotal', 'dailyCounts', 'lastScanAt'])
+            && request.resource.data.targetUrl == resource.data.targetUrl
+            && request.resource.data.ownerId == resource.data.ownerId
+            && request.resource.data.scansTotal is int
+            && request.resource.data.scansTotal == resource.data.scansTotal + 1
+          );
+
+        allow delete: if isSignedIn()
+          && resource.data.ownerId == request.auth.uid;
+      }
+    }
+  }
+}

@@ -567,9 +567,10 @@
     color:var(--text-faint);font-weight:500;
   }
 
-  /* ---------- mode toggle (Diseñador / Plantillas) ---------- */
+  /* ---------- mode toggle (Diseñador / Plantillas / Dinámico) ---------- */
   .mode-toggle{
     display:inline-flex;
+    flex-wrap:wrap;
     gap:4px;
     background:var(--surface);
     border-radius:16px;
@@ -592,6 +593,167 @@
   .mode-btn.active{background:var(--accent);color:#fff;}
   .mode-panel{display:none;}
   .mode-panel.active{display:block;}
+
+  /* ---------- auth + dynamic QR ---------- */
+  .site-top{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:16px;
+    margin-bottom:40px;
+  }
+  .site-top header{margin-bottom:0;flex:1;}
+  .auth-bar{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-shrink:0;
+    padding-top:4px;
+  }
+  .auth-user{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:999px;
+    padding:6px 10px 6px 6px;
+    box-shadow:var(--shadow-sm);
+  }
+  .auth-user img{
+    width:32px;height:32px;border-radius:50%;object-fit:cover;
+    background:var(--border);
+  }
+  .auth-user span{
+    font-size:13px;font-weight:600;color:var(--text);
+    max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .google-btn{
+    display:inline-flex;align-items:center;gap:8px;
+    border:1px solid var(--border);
+    background:var(--surface);
+    color:var(--text);
+    font-family:inherit;font-size:13px;font-weight:600;
+    padding:10px 14px;border-radius:14px;cursor:pointer;
+    box-shadow:var(--shadow-sm);
+  }
+  .google-btn:hover{border-color:#c7c7cc;}
+  .google-btn svg{width:18px;height:18px;flex-shrink:0;}
+  .auth-signout{
+    border:none;background:transparent;color:var(--text-dim);
+    font-family:inherit;font-size:12px;font-weight:600;
+    cursor:pointer;padding:4px 6px;border-radius:8px;
+  }
+  .auth-signout:hover{color:var(--accent-2);background:var(--accent-2-soft);}
+  @media (max-width:700px){
+    .site-top{flex-direction:column;}
+    .auth-bar{width:100%;justify-content:flex-start;}
+    .auth-user span{max-width:120px;}
+  }
+
+  .dyn-banner{
+    background:#FFF6E5;border:1px solid #F5D9A8;color:#7A4E00;
+    border-radius:16px;padding:14px 16px;font-size:13px;line-height:1.5;
+    margin-bottom:18px;
+  }
+  .dyn-banner a{color:#7A4E00;font-weight:700;}
+  .dyn-auth-gate{
+    background:var(--surface);border-radius:22px;padding:36px 28px;
+    box-shadow:var(--shadow-md);text-align:center;max-width:480px;margin:0 auto;
+  }
+  .dyn-auth-gate h2{margin:0 0 8px;font-size:22px;letter-spacing:-0.02em;}
+  .dyn-auth-gate p{margin:0 0 20px;color:var(--text-dim);font-size:14px;line-height:1.55;}
+  .dyn-layout{
+    display:grid;grid-template-columns:280px 1fr;gap:18px;align-items:start;
+  }
+  @media (max-width:900px){
+    .dyn-layout{grid-template-columns:1fr;}
+  }
+  .dyn-sidebar,.dyn-main{
+    background:var(--surface);border-radius:22px;padding:20px;
+    box-shadow:var(--shadow-md);
+  }
+  .dyn-sidebar-head{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    margin-bottom:14px;
+  }
+  .dyn-sidebar-head h2{margin:0;font-size:16px;}
+  .dyn-list{display:flex;flex-direction:column;gap:8px;margin-top:14px;}
+  .dyn-list-item{
+    text-align:left;width:100%;
+    border:1px solid var(--border);background:var(--surface-soft);
+    border-radius:14px;padding:12px;cursor:pointer;
+    font-family:inherit;transition:border-color .15s, background .15s;
+  }
+  .dyn-list-item:hover{border-color:#c7c7cc;}
+  .dyn-list-item.active{border-color:var(--accent);background:var(--accent-soft);}
+  .dyn-list-title{display:block;font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px;}
+  .dyn-list-meta{display:block;font-size:11px;color:var(--text-faint);word-break:break-all;}
+  .dyn-badge{
+    display:inline-block;margin-top:6px;font-size:10px;font-weight:700;
+    padding:3px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent);
+  }
+  .dyn-badge.warn{background:var(--accent-2-soft);color:var(--accent-2);}
+  .dyn-badge.muted{background:var(--border);color:var(--text-dim);}
+  .dyn-empty,.dyn-loading{font-size:13px;color:var(--text-dim);margin:8px 0 0;}
+  .dyn-create-form .field{margin-bottom:12px;}
+  .dyn-create-form .primary{width:100%;margin-top:4px;}
+  .dyn-detail-grid{
+    display:grid;grid-template-columns:1fr 220px;gap:20px;align-items:start;
+  }
+  @media (max-width:700px){
+    .dyn-detail-grid{grid-template-columns:1fr;}
+  }
+  .dyn-stats{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0;
+  }
+  @media (max-width:600px){
+    .dyn-stats{grid-template-columns:repeat(2,1fr);}
+  }
+  .dyn-stat{
+    background:var(--surface-soft);border:1px solid var(--border);
+    border-radius:16px;padding:14px 12px;text-align:center;
+  }
+  .dyn-stat b{display:block;font-size:24px;letter-spacing:-0.02em;margin-bottom:2px;}
+  .dyn-stat span{font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.04em;}
+  .dyn-short-row{
+    display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:10px 0 16px;
+  }
+  .dyn-short-row a{
+    font-size:13px;font-weight:600;color:var(--accent);word-break:break-all;
+  }
+  .dyn-qr-box{
+    background:var(--surface-soft);border:1px solid var(--border);
+    border-radius:18px;padding:14px;text-align:center;
+  }
+  #dyn-qr-holder{display:flex;justify-content:center;min-height:220px;}
+  #dyn-qr-holder canvas{max-width:100%;height:auto;}
+  .dyn-version-card{
+    border:1px solid var(--border);border-radius:14px;padding:12px 14px;
+    background:var(--surface-soft);margin-bottom:10px;
+  }
+  .dyn-version-card.current{border-color:var(--accent);background:rgba(10,132,255,0.04);}
+  .dyn-version-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;}
+  .dyn-version-head strong{font-size:13px;}
+  .dyn-version-url{font-size:12px;color:var(--text);word-break:break-all;margin-bottom:4px;}
+  .dyn-version-meta{font-size:11px;color:var(--text-faint);margin-bottom:8px;}
+  .dyn-version-stats{display:flex;gap:14px;font-size:12px;color:var(--text-dim);}
+  .dyn-version-stats b{color:var(--text);}
+  .dyn-toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:#1D1D1F;color:#fff;font-size:13px;font-weight:600;
+    padding:12px 18px;border-radius:14px;z-index:100;
+    opacity:0;pointer-events:none;transition:opacity .2s, transform .2s;
+    max-width:min(92vw,420px);text-align:center;
+  }
+  .dyn-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .dyn-toast.error{background:#B00020;}
+  .dyn-actions-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+  .dyn-danger-btn{
+    border:1px solid rgba(255,55,95,0.35);background:var(--accent-2-soft);
+    color:var(--accent-2);font-family:inherit;font-size:13px;font-weight:600;
+    padding:10px 14px;border-radius:12px;cursor:pointer;
+  }
 
   /* ---------- saved design presets ---------- */
   .preset-save-row{display:flex;gap:10px;}
@@ -812,15 +974,33 @@
 <body>
 <div class="wrap">
 
+  <div class="site-top">
   <header>
     <div class="eyebrow">Generador de códigos QR</div>
     <h1>GeneraQR</h1>
-    <p>Crea códigos QR para enlaces, WiFi, WhatsApp, e-mail, eventos, redes sociales y más. Personaliza colores, degradados, formas y tu logo — todo se genera al instante en tu navegador, sin registrarte y sin marcas de agua.</p>
+    <p>Crea códigos QR para enlaces, WiFi, WhatsApp, e-mail, eventos, redes sociales y más. Personaliza colores, degradados, formas y tu logo — o crea un QR dinámico con estadísticas y destino editable.</p>
   </header>
+  <div class="auth-bar" id="auth-bar">
+    <div id="auth-logged-out">
+      <button type="button" class="google-btn" data-auth-signin>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Entrar con Google
+      </button>
+    </div>
+    <div id="auth-logged-in" hidden>
+      <div class="auth-user">
+        <img id="auth-user-avatar" alt="" hidden>
+        <span id="auth-user-name">Cuenta</span>
+        <button type="button" class="auth-signout" id="auth-signout-btn">Salir</button>
+      </div>
+    </div>
+  </div>
+  </div>
 
   <div class="mode-toggle" id="mode-toggle">
     <button type="button" class="mode-btn active" data-mode="designer">Diseñador QR</button>
     <button type="button" class="mode-btn" data-mode="templates">Plantillas creativas</button>
+    <button type="button" class="mode-btn" data-mode="dynamic">QR dinámico</button>
   </div>
 
   <div class="mode-panel active" data-mode-panel="designer">
@@ -1360,6 +1540,108 @@
 
   </div>
 
+  <div class="mode-panel" data-mode-panel="dynamic">
+    <div class="dyn-banner" id="dyn-config-banner" hidden>
+      Firebase aún no está configurado. Copia tus claves en <code>firebase-config.js</code> y sigue la guía
+      <a href="./FIREBASE_SETUP.md" target="_blank" rel="noopener">FIREBASE_SETUP.md</a>.
+    </div>
+
+    <div class="dyn-auth-gate" id="dyn-auth-gate">
+      <h2>QR dinámicos con estadísticas</h2>
+      <p>Inicia sesión con Google para crear enlaces cortos que puedes cambiar después, ver escaneos de hoy, del mes y el total, y separar estadísticas cada vez que actualices el destino.</p>
+      <button type="button" class="google-btn" data-auth-signin>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Continuar con Google
+      </button>
+    </div>
+
+    <div id="dyn-app" hidden>
+      <div class="dyn-layout">
+        <aside class="dyn-sidebar">
+          <div class="dyn-sidebar-head">
+            <h2>Tus QR</h2>
+            <button type="button" class="pill-btn" id="dyn-refresh-btn">Actualizar</button>
+          </div>
+
+          <form class="dyn-create-form" id="dyn-create-form">
+            <p class="card-title" style="margin-bottom:10px;">Crear QR dinámico</p>
+            <div class="field">
+              <label class="field-label" for="dyn-new-title">Nombre</label>
+              <input type="text" id="dyn-new-title" placeholder="Campaña menú 2026" maxlength="80" required>
+            </div>
+            <div class="field">
+              <label class="field-label" for="dyn-new-target">URL de destino</label>
+              <input type="text" id="dyn-new-target" placeholder="https://tusitio.com/promo" required>
+            </div>
+            <button type="submit" class="primary" id="dyn-create-btn">Crear</button>
+          </form>
+
+          <p class="dyn-loading" id="dyn-list-loading" hidden>Cargando…</p>
+          <p class="dyn-empty" id="dyn-list-empty">Aún no tienes QR dinámicos.</p>
+          <div class="dyn-list" id="dyn-list"></div>
+        </aside>
+
+        <section class="dyn-main" id="dyn-detail" hidden>
+          <p class="dyn-loading" id="dyn-detail-loading" hidden>Cargando detalle…</p>
+          <div class="dyn-detail-grid">
+            <div>
+              <p class="card-title" id="dyn-detail-title">—</p>
+              <p class="card-subtitle" id="dyn-active-note"></p>
+              <div class="dyn-short-row">
+                <a id="dyn-detail-link" href="#" target="_blank" rel="noopener">—</a>
+                <button type="button" class="pill-btn" id="dyn-copy-link">Copiar enlace</button>
+              </div>
+
+              <div class="dyn-stats">
+                <div class="dyn-stat"><b id="dyn-stat-daily">0</b><span>Hoy</span></div>
+                <div class="dyn-stat"><b id="dyn-stat-monthly">0</b><span>Este mes</span></div>
+                <div class="dyn-stat"><b id="dyn-stat-total">0</b><span>Versión</span></div>
+                <div class="dyn-stat"><b id="dyn-stat-lifetime">0</b><span>Histórico</span></div>
+              </div>
+
+              <form id="dyn-title-form" style="margin-bottom:14px;">
+                <div class="field" style="margin-bottom:8px;">
+                  <label class="field-label" for="dyn-title-input">Nombre</label>
+                  <div class="preset-save-row">
+                    <input type="text" id="dyn-title-input" maxlength="80">
+                    <button type="submit" class="primary">Guardar</button>
+                  </div>
+                </div>
+              </form>
+
+              <form id="dyn-target-form">
+                <div class="field" style="margin-bottom:8px;">
+                  <label class="field-label" for="dyn-target-input">URL de destino</label>
+                  <div class="preset-save-row">
+                    <input type="text" id="dyn-target-input" required>
+                    <button type="submit" class="primary" id="dyn-save-target-btn">Cambiar</button>
+                  </div>
+                  <p class="field-hint">Al cambiar la URL se abre una versión nueva con contadores en cero. El código QR impreso no cambia.</p>
+                </div>
+              </form>
+
+              <div class="dyn-actions-row">
+                <button type="button" class="dyn-danger-btn" id="dyn-deactivate-btn">Desactivar QR</button>
+              </div>
+
+              <p class="card-title" style="margin:22px 0 10px;">Historial de versiones</p>
+              <div id="dyn-versions"></div>
+            </div>
+
+            <div class="dyn-qr-box">
+              <p class="field-label" style="margin-bottom:10px;">Código para imprimir</p>
+              <div id="dyn-qr-holder"></div>
+              <button type="button" class="primary" id="dyn-download-qr" style="width:100%;margin-top:12px;">Descargar PNG</button>
+              <p class="field-hint" style="margin-top:10px;">Este QR apunta al enlace corto. Puedes personalizarlo también en el Diseñador pegando el mismo enlace.</p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div id="dyn-toast" class="dyn-toast" role="status" aria-live="polite"></div>
+
   <section class="seo-content">
     <h2>Generador de códigos QR gratis, rápido y sin registro</h2>
     <p>GeneraQR te permite crear códigos QR personalizados para enlaces, menús, tarjetas de presentación, redes sociales o cualquier texto. Ajusta colores sólidos o degradados, elige la forma de los puntos y las esquinas, e inserta tu logo con recorte incluido. Todo el proceso ocurre localmente en tu navegador: tu enlace nunca se envía a un servidor.</p>
@@ -1391,7 +1673,7 @@
       </div>
       <div class="faq-item">
         <h3>¿Los códigos QR caducan?</h3>
-        <p>No. Como el contenido se codifica directamente dentro del QR, el código funciona de forma permanente mientras el enlace o texto siga siendo válido.</p>
+        <p>Los QR estáticos del diseñador no caducan: el contenido va dentro del código. Los QR dinámicos dependen de que el enlace corto siga activo en GeneraQR y de que no los desactives desde tu cuenta.</p>
       </div>
       <div class="faq-item">
         <h3>¿Puedo agregar mi logo sin que el QR deje de funcionar?</h3>
@@ -1401,11 +1683,26 @@
         <h3>¿En qué formato puedo descargar mi código QR?</h3>
         <p>Puedes descargar tu código QR en PNG en tres resoluciones: 512px, 1024px o 2048px, según el uso que le vayas a dar.</p>
       </div>
+      <div class="faq-item">
+        <h3>¿Qué es un QR dinámico?</h3>
+        <p>Es un código con un enlace corto fijo (por ejemplo generaqr.xyz/r/Ab12Cd34). Puedes cambiar la URL de destino sin reimprimir el QR, y ver cuántas veces se escaneó hoy, este mes y en total. Si cambias el enlace, las estadísticas de la nueva versión empiezan de cero y el historial anterior se conserva.</p>
+      </div>
+      <div class="faq-item">
+        <h3>¿Necesito cuenta para usar GeneraQR?</h3>
+        <p>No para el diseñador ni las plantillas: todo se genera en tu navegador. Solo el modo QR dinámico pide inicio de sesión con Google para guardar tus enlaces y estadísticas en Firebase.</p>
+      </div>
     </div>
   </section>
 
-  <footer>GeneraQR · generado localmente, tu enlace no se envía a ningún servidor</footer>
+  <footer>GeneraQR · diseñador local · QR dinámicos con Firebase</footer>
 </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="./firebase-config.js"></script>
+  <script src="./js/generaqr-firebase.js"></script>
+  <script src="./js/dynamic-qr-panel.js"></script>
 
 <script>
   /* ---------- tabs ---------- */

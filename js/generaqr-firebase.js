@@ -1,0 +1,392 @@
+/**
+ * Núcleo compartido Firebase + helpers de QR dinámico.
+ * Requiere: firebase-app/auth/firestore compat + firebase-config.js
+ */
+(function (global) {
+  'use strict';
+
+  function isConfigured() {
+    const cfg = global.FIREBASE_CONFIG;
+    if (!cfg || !cfg.apiKey || !cfg.projectId || !cfg.appId) return false;
+    const values = [cfg.apiKey, cfg.projectId, cfg.appId, cfg.authDomain || ''];
+    return values.every((v) => v && String(v).indexOf('TU_') === -1);
+  }
+
+  let app = null;
+  let auth = null;
+  let db = null;
+  let googleProvider = null;
+  let initError = null;
+
+  function init() {
+    if (app) return { app, auth, db, googleProvider };
+    if (typeof firebase === 'undefined') {
+      initError = 'Firebase SDK no cargó. Revisa la conexión a internet.';
+      throw new Error(initError);
+    }
+    if (!isConfigured()) {
+      initError = 'Firebase no está configurado. Edita firebase-config.js con tus claves.';
+      throw new Error(initError);
+    }
+    app = firebase.initializeApp(global.FIREBASE_CONFIG);
+    auth = firebase.auth();
+    db = firebase.firestore();
+    googleProvider = new firebase.auth.GoogleAuthProvider();
+    googleProvider.setCustomParameters({ prompt: 'select_account' });
+    return { app, auth, db, googleProvider };
+  }
+
+  function getInitError() {
+    return initError;
+  }
+
+  function publicOrigin() {
+    if (global.GENERQR_PUBLIC_ORIGIN) return String(global.GENERQR_PUBLIC_ORIGIN).replace(/\/$/, '');
+    return location.origin;
+  }
+
+  function shortLink(code) {
+    return publicOrigin() + '/r/' + code;
+  }
+
+  function todayKey(date) {
+    const d = date || new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return y + '-' + m + '-' + day;
+  }
+
+  function monthPrefix(date) {
+    return todayKey(date).slice(0, 7);
+  }
+
+  function computeStats(dailyCounts, scansTotal) {
+    const counts = dailyCounts || {};
+    const today = todayKey();
+    const month = monthPrefix();
+    let monthly = 0;
+    Object.keys(counts).forEach((k) => {
+      if (k.indexOf(month) === 0) monthly += Number(counts[k]) || 0;
+    });
+    return {
+      daily: Number(counts[today]) || 0,
+      monthly: monthly,
+      total: Number(scansTotal) || 0
+    };
+  }
+
+  const ALPHABET = 'abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+  function randomCode(len) {
+    const n = len || 8;
+    const arr = new Uint8Array(n);
+    crypto.getRandomValues(arr);
+    let out = '';
+    for (let i = 0; i < n; i++) out += ALPHABET[arr[i] % ALPHABET.length];
+    return out;
+  }
+
+  function normalizeUrl(raw) {
+    const v = String(raw || '').trim();
+    if (!v) return '';
+    if (/^(https?:|mailto:|tel:)/i.test(v)) return v;
+    return 'https://' + v;
+  }
+
+  function isValidDestination(url) {
+    if (!url || url.length > 2048) return false;
+    return /^(https?:\/\/.+|mailto:.+|tel:.+)/i.test(url);
+  }
+
+  async function ensureUserProfile(user) {
+    const { db } = init();
+    const ref = db.collection('users').doc(user.uid);
+    const snap = await ref.get();
+    const payload = {
+      email: user.email || '',
+      displayName: user.displayName || '',
+      photoURL: user.photoURL || '',
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    if (!snap.exists) {
+      payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      await ref.set(payload);
+    } else {
+      await ref.set(payload, { merge: true });
+    }
+  }
+
+  async function signInWithGoogle() {
+    const { auth, googleProvider } = init();
+    const result = await auth.signInWithPopup(googleProvider);
+    await ensureUserProfile(result.user);
+    return result.user;
+  }
+
+  async function signOut() {
+    const { auth } = init();
+    await auth.signOut();
+  }
+
+  function onAuth(callback) {
+    const { auth } = init();
+    return auth.onAuthStateChanged(callback);
+  }
+
+  async function createDynamicQr({ title, targetUrl }) {
+    const { auth, db } = init();
+    const user = auth.currentUser;
+    if (!user) throw new Error('Debes iniciar sesión.');
+
+    const url = normalizeUrl(targetUrl);
+    if (!isValidDestination(url)) throw new Error('URL de destino no válida.');
+    const name = String(title || '').trim() || 'Mi QR dinámico';
+    if (name.length > 80) throw new Error('El nombre es demasiado largo.');
+
+    let code = randomCode(8);
+    for (let i = 0; i < 5; i++) {
+      const exists = await db.collection('dynamicQrs').doc(code).get();
+      if (!exists.exists) break;
+      code = randomCode(8);
+    }
+
+    const qrRef = db.collection('dynamicQrs').doc(code);
+    const versionRef = qrRef.collection('versions').doc();
+    const batch = db.batch();
+    const now = firebase.firestore.FieldValue.serverTimestamp();
+
+    batch.set(versionRef, {
+      ownerId: user.uid,
+      targetUrl: url,
+      createdAt: now,
+      endedAt: null,
+      scansTotal: 0,
+      dailyCounts: {},
+      lastScanAt: null
+    });
+
+    batch.set(qrRef, {
+      ownerId: user.uid,
+      title: name,
+      targetUrl: url,
+      currentVersionId: versionRef.id,
+      createdAt: now,
+      updatedAt: now,
+      active: true
+    });
+
+    await batch.commit();
+    return { id: code, shortUrl: shortLink(code), versionId: versionRef.id };
+  }
+
+  async function listMyDynamicQrs() {
+    const { auth, db } = init();
+    const user = auth.currentUser;
+    if (!user) return [];
+    const snap = await db.collection('dynamicQrs')
+      .where('ownerId', '==', user.uid)
+      .orderBy('updatedAt', 'desc')
+      .get();
+    return snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
+  }
+
+  async function getDynamicQr(id) {
+    const { db } = init();
+    const snap = await db.collection('dynamicQrs').doc(id).get();
+    if (!snap.exists) return null;
+    return Object.assign({ id: snap.id }, snap.data());
+  }
+
+  async function listVersions(qrId) {
+    const { auth, db } = init();
+    const user = auth.currentUser;
+    if (!user) throw new Error('Debes iniciar sesión.');
+    const snap = await db.collection('dynamicQrs').doc(qrId)
+      .collection('versions')
+      .where('ownerId', '==', user.uid)
+      .orderBy('createdAt', 'desc')
+      .get();
+    return snap.docs.map((d) => {
+      const data = d.data();
+      return Object.assign({
+        id: d.id,
+        stats: computeStats(data.dailyCounts, data.scansTotal)
+      }, data);
+    });
+  }
+
+  async function getVersion(qrId, versionId) {
+    const { db } = init();
+    const snap = await db.collection('dynamicQrs').doc(qrId)
+      .collection('versions').doc(versionId).get();
+    if (!snap.exists) return null;
+    const data = snap.data();
+    return Object.assign({
+      id: snap.id,
+      stats: computeStats(data.dailyCounts, data.scansTotal)
+    }, data);
+  }
+
+  /**
+   * Cambia el destino del QR. El código corto (y el QR impreso) no cambia,
+   * pero se cierra la versión actual y se abre una nueva con contadores en cero.
+   */
+  async function changeDestination(qrId, newTargetUrl) {
+    const { auth, db } = init();
+    const user = auth.currentUser;
+    if (!user) throw new Error('Debes iniciar sesión.');
+
+    const url = normalizeUrl(newTargetUrl);
+    if (!isValidDestination(url)) throw new Error('URL de destino no válida.');
+
+    const qrRef = db.collection('dynamicQrs').doc(qrId);
+    const qrSnap = await qrRef.get();
+    if (!qrSnap.exists) throw new Error('QR no encontrado.');
+    const qr = qrSnap.data();
+    if (qr.ownerId !== user.uid) throw new Error('No tienes permiso sobre este QR.');
+    if (normalizeUrl(qr.targetUrl) === url) throw new Error('Esa ya es la URL actual.');
+
+    const batch = db.batch();
+    const now = firebase.firestore.FieldValue.serverTimestamp();
+    const oldVersionRef = qrRef.collection('versions').doc(qr.currentVersionId);
+    batch.update(oldVersionRef, { endedAt: now });
+
+    const newVersionRef = qrRef.collection('versions').doc();
+    batch.set(newVersionRef, {
+      ownerId: user.uid,
+      targetUrl: url,
+      createdAt: now,
+      endedAt: null,
+      scansTotal: 0,
+      dailyCounts: {},
+      lastScanAt: null
+    });
+
+    batch.update(qrRef, {
+      targetUrl: url,
+      currentVersionId: newVersionRef.id,
+      updatedAt: now
+    });
+
+    await batch.commit();
+    return { versionId: newVersionRef.id, targetUrl: url };
+  }
+
+  async function updateTitle(qrId, title) {
+    const { auth, db } = init();
+    const user = auth.currentUser;
+    if (!user) throw new Error('Debes iniciar sesión.');
+    const name = String(title || '').trim();
+    if (!name || name.length > 80) throw new Error('Nombre no válido.');
+    const qrRef = db.collection('dynamicQrs').doc(qrId);
+    const snap = await qrRef.get();
+    if (!snap.exists || snap.data().ownerId !== user.uid) throw new Error('QR no encontrado.');
+    await qrRef.update({
+      title: name,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }
+
+  async function deactivateQr(qrId) {
+    const { auth, db } = init();
+    const user = auth.currentUser;
+    if (!user) throw new Error('Debes iniciar sesión.');
+    const qrRef = db.collection('dynamicQrs').doc(qrId);
+    const snap = await qrRef.get();
+    if (!snap.exists || snap.data().ownerId !== user.uid) throw new Error('QR no encontrado.');
+    await qrRef.update({
+      active: false,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }
+
+  /**
+   * Registra un escaneo y devuelve la URL de destino.
+   * Usado por la página de redirección (/r/CODE).
+   */
+  async function registerScanAndGetTarget(code) {
+    const { db } = init();
+    const qrRef = db.collection('dynamicQrs').doc(code);
+    const qrSnap = await qrRef.get();
+    if (!qrSnap.exists) {
+      const err = new Error('Este código QR no existe.');
+      err.code = 'not-found';
+      throw err;
+    }
+    const qr = qrSnap.data();
+    if (qr.active === false) {
+      const err = new Error('Este código QR está desactivado.');
+      err.code = 'inactive';
+      throw err;
+    }
+    if (!qr.targetUrl || !qr.currentVersionId) {
+      const err = new Error('Este QR no tiene destino configurado.');
+      err.code = 'no-target';
+      throw err;
+    }
+
+    const versionRef = qrRef.collection('versions').doc(qr.currentVersionId);
+    const day = todayKey();
+    try {
+      await versionRef.update({
+        scansTotal: firebase.firestore.FieldValue.increment(1),
+        ['dailyCounts.' + day]: firebase.firestore.FieldValue.increment(1),
+        lastScanAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    } catch (e) {
+      // Si falla el contador (reglas / red), igual redirigimos para no romper el QR.
+      console.warn('No se pudo registrar el escaneo:', e);
+    }
+
+    return {
+      targetUrl: qr.targetUrl,
+      title: qr.title || '',
+      versionId: qr.currentVersionId
+    };
+  }
+
+  function extractCodeFromLocation(loc) {
+    const location = loc || global.location;
+    const params = new URLSearchParams(location.search);
+    if (params.get('c')) return params.get('c').trim();
+    if (params.get('r')) return params.get('r').trim();
+
+    const path = location.pathname || '';
+    const m = path.match(/\/r\/([A-Za-z0-9_-]+)\/?$/);
+    if (m) return m[1];
+
+    // GitHub Pages 404: a veces la ruta queda en ?pathname= o se pasa via hash
+    if (location.hash) {
+      const hm = location.hash.match(/[#/]*r\/([A-Za-z0-9_-]+)/);
+      if (hm) return hm[1];
+    }
+    return '';
+  }
+
+  global.GeneraQRFirebase = {
+    isConfigured,
+    init,
+    getInitError,
+    publicOrigin,
+    shortLink,
+    todayKey,
+    monthPrefix,
+    computeStats,
+    normalizeUrl,
+    isValidDestination,
+    signInWithGoogle,
+    signOut,
+    onAuth,
+    createDynamicQr,
+    listMyDynamicQrs,
+    getDynamicQr,
+    listVersions,
+    getVersion,
+    changeDestination,
+    updateTitle,
+    deactivateQr,
+    registerScanAndGetTarget,
+    extractCodeFromLocation
+  };
+})(window);

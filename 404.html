@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GeneraQR</title>
+<meta name="robots" content="noindex">
+<script>
+  // GitHub Pages: rutas inexistentes llegan aquí.
+  // Si es /r/CODIGO → redirigimos a d.html?c=CODIGO para registrar el escaneo.
+  (function () {
+    var path = location.pathname || '';
+    var m = path.match(/\/r\/([A-Za-z0-9_-]+)\/?$/);
+    if (m) {
+      location.replace('/d.html?c=' + encodeURIComponent(m[1]));
+      return;
+    }
+    // Cualquier otra 404 → inicio
+    location.replace('/');
+  })();
+</script>
+</head>
+<body>
+  <p>Redirigiendo…</p>
+</body>
+</html>
