@@ -402,7 +402,7 @@
       await api().updateLandingSettings(selectedQrId, {
         landingEnabled: !!($('dyn-landing-enabled') && $('dyn-landing-enabled').checked),
         landingMessage: ($('dyn-landing-message') && $('dyn-landing-message').value) || '',
-        landingCountdown: ($('dyn-landing-countdown') && $('dyn-landing-countdown').value) || 5
+        landingCountdown: ($('dyn-landing-countdown') && $('dyn-landing-countdown').value) || 2
       });
       showToast('Página intermedia guardada');
       await openDetail(selectedQrId);
