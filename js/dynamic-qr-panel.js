@@ -237,11 +237,11 @@
     const landingEnabled = $('dyn-landing-enabled');
     const landingMessage = $('dyn-landing-message');
     const landingCountdown = $('dyn-landing-countdown');
-    if (landingEnabled) landingEnabled.checked = detailQr.landingEnabled !== false;
+    if (landingEnabled) landingEnabled.checked = detailQr.landingEnabled === true;
     if (landingMessage) landingMessage.value = detailQr.landingMessage || '';
     if (landingCountdown) {
       const c = parseInt(detailQr.landingCountdown, 10);
-      landingCountdown.value = String(isNaN(c) ? 5 : c);
+      landingCountdown.value = String(isNaN(c) ? 2 : c);
     }
 
     renderChart(ver && ver.dailyCounts);

@@ -1,7 +1,6 @@
 /**
- * Página intermedia / redirección de QR dinámicos.
- * URL corta: https://generaqr.xyz/r/CODIGO  (vía 404.html)
- * Alternativa: https://generaqr.xyz/d.html?c=CODIGO
+ * Redirección rápida de QR dinámicos (+ página intermedia opcional).
+ * URL corta: https://generaqr.xyz/r/CODIGO  (404.html o d.html?c=CODIGO)
  */
 (function () {
   'use strict';
@@ -32,26 +31,32 @@
 
   function goNow() {
     if (!targetUrl) return;
-    if (timer) clearInterval(timer);
+    if (timer) {
+      clearInterval(timer);
+      timer = null;
+    }
     if (ctaBtn) ctaBtn.disabled = true;
     window.location.replace(targetUrl);
   }
 
   function startCountdown(seconds) {
-    remaining = seconds;
+    remaining = Math.max(0, seconds | 0);
     if (!countdownEl) return;
-    if (seconds <= 0) {
+    if (remaining <= 0) {
       countdownEl.textContent = '';
       if (skipLink) skipLink.hidden = true;
+      // microtask: deja pintar el botón un instante y salta
+      setTimeout(goNow, 0);
       return;
     }
     if (skipLink) skipLink.hidden = false;
     const tick = function () {
       countdownEl.textContent = remaining > 0
-        ? ('Redirección automática en ' + remaining + 's…')
+        ? ('Redirección en ' + remaining + 's…')
         : 'Abriendo…';
       if (remaining <= 0) {
         clearInterval(timer);
+        timer = null;
         goNow();
         return;
       }
@@ -111,17 +116,16 @@
       return;
     }
 
-    setStatus('Preparando enlace…', 'Registrando escaneo.');
+    setStatus('Abriendo…', '');
 
     try {
       api.init();
       const result = await api.registerScanAndGetTarget(code);
+      targetUrl = result.targetUrl;
 
-      // Sin página intermedia → redirect inmediato
-      if (result.landingEnabled === false) {
-        setStatus('Listo', 'Abriendo ' + result.targetUrl);
-        targetUrl = result.targetUrl;
-        setTimeout(goNow, 120);
+      // Por defecto: redirect inmediato (sin página intermedia)
+      if (!result.landingEnabled) {
+        goNow();
         return;
       }
 
@@ -134,6 +138,7 @@
     }
   }
 
+  // Arrancar lo antes posible (no esperar DOMContentLoaded si ya está listo)
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', run);
   } else {

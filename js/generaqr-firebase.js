@@ -174,9 +174,9 @@
       createdAt: now,
       updatedAt: now,
       active: true,
-      landingEnabled: true,
+      landingEnabled: false,
       landingMessage: '',
-      landingCountdown: 5
+      landingCountdown: 2
     });
 
     await batch.commit();
@@ -313,7 +313,7 @@
     if (!snap.exists || snap.data().ownerId !== user.uid) throw new Error('QR no encontrado.');
 
     let countdown = parseInt(settings.landingCountdown, 10);
-    if (isNaN(countdown)) countdown = 5;
+    if (isNaN(countdown)) countdown = 2;
     countdown = Math.max(0, Math.min(30, countdown));
 
     const message = String(settings.landingMessage || '').trim().slice(0, 160);
@@ -378,20 +378,19 @@
 
     const versionRef = qrRef.collection('versions').doc(qr.currentVersionId);
     const day = todayKey();
-    try {
-      await versionRef.update({
-        scansTotal: firebase.firestore.FieldValue.increment(1),
-        ['dailyCounts.' + day]: firebase.firestore.FieldValue.increment(1),
-        lastScanAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-    } catch (e) {
-      // Si falla el contador (reglas / red), igual redirigimos para no romper el QR.
+    // No esperamos el incremento: la redirección no debe bloquearse por el contador.
+    versionRef.update({
+      scansTotal: firebase.firestore.FieldValue.increment(1),
+      ['dailyCounts.' + day]: firebase.firestore.FieldValue.increment(1),
+      lastScanAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).catch(function (e) {
       console.warn('No se pudo registrar el escaneo:', e);
-    }
+    });
 
-    const landingEnabled = qr.landingEnabled !== false;
+    // Solo si está explícitamente activada (por defecto: redirect inmediato)
+    const landingEnabled = qr.landingEnabled === true;
     let countdown = parseInt(qr.landingCountdown, 10);
-    if (isNaN(countdown)) countdown = 5;
+    if (isNaN(countdown)) countdown = 2;
 
     return {
       targetUrl: qr.targetUrl,

@@ -110,7 +110,7 @@ Si Google te pide configurar la pantalla OAuth:
    - Se registra el escaneo en Firestore
    - Se redirige a la URL actual
 6. Si **cambias el destino**, el código corto **no cambia**, pero se cierra la versión anterior y se abre una nueva con contadores en cero. El historial de versiones conserva las estadísticas viejas.
-7. Por defecto hay **página intermedia** (`d.html`) con mensaje y cuenta atrás antes de abrir el destino. Puedes desactivarla o editar el mensaje en el panel del QR.
+7. Por defecto la redirección es **inmediata** (sin página intermedia). Si activas la página intermedia en el panel del QR, el visitante ve mensaje + cuenta atrás antes de abrir el destino.
 
 ### Estadísticas
 
