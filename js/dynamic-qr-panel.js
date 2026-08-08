@@ -12,7 +12,6 @@
   let detailQr = null;
   let versionsCache = [];
   let previewQr = null;
-  let shrinkBound = false;
 
   const DEFAULT_STYLE = {
     dotsType: 'rounded',
@@ -321,7 +320,6 @@
     renderChart(ver && ver.dailyCounts);
     renderVersions();
     renderPreview(shortUrl);
-    bindQrShrink();
   }
 
   function fillLandingFieldsFromQr() {
@@ -467,13 +465,13 @@
       return;
     }
     const style = activeStyle();
-    const size = 280;
+    const size = 220;
     previewQr = new QRCodeStyling({
       width: size,
       height: size,
       type: 'canvas',
       data: shortUrl,
-      margin: 10,
+      margin: 8,
       qrOptions: { errorCorrectionLevel: 'M' },
       dotsOptions: Object.assign(
         { type: style.dotsType || 'rounded' },
@@ -490,28 +488,6 @@
       backgroundOptions: { color: style.bgColor || '#FFFFFF' }
     });
     previewQr.append(holder);
-  }
-
-  function bindQrShrink() {
-    const box = $('dyn-qr-box');
-    if (!box || shrinkBound) return;
-    shrinkBound = true;
-    const onScroll = () => {
-      if (window.matchMedia('(min-width: 901px)').matches) {
-        box.style.setProperty('--dyn-qr-scale', '1');
-        box.classList.remove('is-compact');
-        return;
-      }
-      const y = window.scrollY || document.documentElement.scrollTop || 0;
-      // De 0→220px de scroll: escala 1 → 0.42
-      const t = Math.min(1, Math.max(0, y / 220));
-      const scale = 1 - t * 0.58;
-      box.style.setProperty('--dyn-qr-scale', String(scale.toFixed(3)));
-      box.classList.toggle('is-compact', scale < 0.72);
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll);
-    onScroll();
   }
 
   async function handleCreate(e) {

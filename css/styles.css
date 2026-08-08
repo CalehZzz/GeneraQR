@@ -76,9 +76,26 @@
   }
   @media (max-width:900px){
     .grid{grid-template-columns:1fr;}
-    .preview-panel{order:-1;position:sticky;top:10px;z-index:20;}
-    .preview-card{padding:18px;gap:14px;}
-    .qr-stage{max-width:180px;}
+    .preview-panel{order:-1;position:sticky;top:8px;z-index:20;}
+    .preview-card{
+      padding:14px;
+      gap:10px;
+      border-radius:22px;
+    }
+    .preview-body{
+      gap:12px;
+      margin-top:10px;
+      max-height:none;
+    }
+    .qr-stage{
+      max-width:var(--designer-qr-size, 200px);
+      transition:max-width .08s linear;
+    }
+    .preview-card.is-compact .actions,
+    .preview-card.is-compact .meta-row{display:none;}
+    .preview-card.is-compact .preview-body{gap:6px;margin-top:6px;}
+    .preview-card.is-compact{padding:10px 12px;}
+    .actions{max-width:var(--designer-qr-size, 200px);}
   }
 
   .stack{display:flex;flex-direction:column;gap:18px;}
@@ -638,9 +655,9 @@
   .dyn-create-form .field{margin-bottom:12px;}
   .dyn-create-form .primary{width:100%;margin-top:4px;}
   .dyn-detail-grid{
-    display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,320px);gap:22px;align-items:start;
+    display:grid;grid-template-columns:1fr 240px;gap:20px;align-items:start;
   }
-  @media (max-width:900px){
+  @media (max-width:700px){
     .dyn-detail-grid{grid-template-columns:1fr;}
   }
   .dyn-stats{
@@ -663,45 +680,22 @@
   }
   .dyn-qr-box{
     background:var(--surface-soft);border:1px solid var(--border);
-    border-radius:20px;padding:18px 16px;text-align:center;
-    position:sticky;top:24px;
+    border-radius:18px;padding:14px;text-align:center;
   }
-  .dyn-qr-box .field-label{margin-bottom:12px;}
+  .dyn-qr-box .field-label{margin-bottom:10px;}
   #dyn-qr-holder{
     display:flex;justify-content:center;align-items:center;
-    width:min(100%,280px);aspect-ratio:1;margin:0 auto;
-    background:#fff;border-radius:16px;border:1px solid var(--border);
-    overflow:hidden;
+    min-height:220px;margin:0 auto;
   }
   #dyn-qr-holder canvas,
   #dyn-qr-holder svg{
-    width:100% !important;height:100% !important;max-width:100%;display:block;
+    max-width:100%;height:auto;display:block;
   }
   .dyn-qr-actions{display:flex;flex-direction:column;gap:8px;margin-top:12px;}
   .dyn-qr-actions .primary,
   .dyn-qr-actions .ghost,
   .dyn-qr-actions .pill-btn{width:100%;justify-content:center;}
   .dyn-style-note{font-size:12px;color:var(--text-dim);margin:8px 0 0;min-height:1.2em;}
-
-  /* En móvil el QR sticky se encoge al hacer scroll */
-  @media (max-width:900px){
-    .dyn-detail-grid{display:flex;flex-direction:column;}
-    .dyn-qr-box{
-      order:-1;top:8px;z-index:25;
-      padding:12px;
-      transform:scale(var(--dyn-qr-scale, 1));
-      transform-origin:top center;
-      will-change:transform;
-      box-shadow:var(--shadow-md);
-      transition:padding .12s ease;
-    }
-    .dyn-qr-box.is-compact{padding:8px 10px;}
-    .dyn-qr-box.is-compact .dyn-qr-actions,
-    .dyn-qr-box.is-compact .dyn-style-note,
-    .dyn-qr-box.is-compact .field-hint{display:none;}
-    .dyn-qr-box.is-compact .field-label{font-size:11px;margin-bottom:6px;}
-    #dyn-qr-holder{width:min(100%,220px);}
-  }
 
   /* Modal diseños guardados */
   .dyn-modal-backdrop{
