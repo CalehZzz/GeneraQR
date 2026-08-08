@@ -18,6 +18,55 @@
   let googleProvider = null;
   let initError = null;
 
+  const CACHE_PREFIX = 'generaqr_fs_cache_v1:';
+  const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutos
+
+  function cacheKey(parts) {
+    return CACHE_PREFIX + parts.join(':');
+  }
+
+  function cacheGet(key) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed.t !== 'number') return null;
+      if (Date.now() - parsed.t > CACHE_TTL_MS) return null;
+      return parsed.data;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function cacheSet(key, data) {
+    try {
+      localStorage.setItem(key, JSON.stringify({ t: Date.now(), data: data }));
+    } catch (e) { /* quota / private mode */ }
+  }
+
+  function cacheRemove(key) {
+    try { localStorage.removeItem(key); } catch (e) { /* ignore */ }
+  }
+
+  function cacheInvalidateUser(uid) {
+    if (!uid) return;
+    try {
+      const keys = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.indexOf(CACHE_PREFIX) === 0 && k.indexOf(':' + uid) !== -1) keys.push(k);
+      }
+      keys.forEach(function (k) { localStorage.removeItem(k); });
+    } catch (e) { /* ignore */ }
+  }
+
+  function cacheInvalidateQr(uid, qrId) {
+    if (!uid || !qrId) return;
+    cacheRemove(cacheKey(['qr', uid, qrId]));
+    cacheRemove(cacheKey(['versions', uid, qrId]));
+    cacheRemove(cacheKey(['list', uid]));
+  }
+
   function init() {
     if (app) return { app, auth, db, googleProvider };
     if (typeof firebase === 'undefined') {
@@ -174,49 +223,84 @@
       createdAt: now,
       updatedAt: now,
       active: true,
+      qrStyle: null,
+      styleName: '',
       landingEnabled: false,
+      landingTitle: '',
       landingMessage: '',
-      landingCountdown: 2
+      landingCta: 'Abrir enlace',
+      landingCountdown: 2,
+      landingBg: '#0B1220',
+      landingAccent: '#7CF2D6',
+      landingText: '#F4F7FB',
+      landingShowBrand: true,
+      landingShowHost: true
     });
 
     await batch.commit();
+    cacheInvalidateUser(user.uid);
     return { id: code, shortUrl: shortLink(code), versionId: versionRef.id };
   }
 
-  async function listMyDynamicQrs() {
+  async function listMyDynamicQrs(options) {
+    const opts = options || {};
     const { auth, db } = init();
     const user = auth.currentUser;
     if (!user) return [];
+    const key = cacheKey(['list', user.uid]);
+    if (!opts.force) {
+      const cached = cacheGet(key);
+      if (cached) return cached;
+    }
     const snap = await db.collection('dynamicQrs')
       .where('ownerId', '==', user.uid)
       .orderBy('updatedAt', 'desc')
       .get();
-    return snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
+    const list = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
+    cacheSet(key, list);
+    return list;
   }
 
-  async function getDynamicQr(id) {
-    const { db } = init();
+  async function getDynamicQr(id, options) {
+    const opts = options || {};
+    const { auth, db } = init();
+    const user = auth.currentUser;
+    const key = user ? cacheKey(['qr', user.uid, id]) : null;
+    if (!opts.force && key) {
+      const cached = cacheGet(key);
+      if (cached) return cached;
+    }
     const snap = await db.collection('dynamicQrs').doc(id).get();
     if (!snap.exists) return null;
-    return Object.assign({ id: snap.id }, snap.data());
+    const data = Object.assign({ id: snap.id }, snap.data());
+    if (key) cacheSet(key, data);
+    return data;
   }
 
-  async function listVersions(qrId) {
+  async function listVersions(qrId, options) {
+    const opts = options || {};
     const { auth, db } = init();
     const user = auth.currentUser;
     if (!user) throw new Error('Debes iniciar sesión.');
+    const key = cacheKey(['versions', user.uid, qrId]);
+    if (!opts.force) {
+      const cached = cacheGet(key);
+      if (cached) return cached;
+    }
     const snap = await db.collection('dynamicQrs').doc(qrId)
       .collection('versions')
       .where('ownerId', '==', user.uid)
       .orderBy('createdAt', 'desc')
       .get();
-    return snap.docs.map((d) => {
+    const list = snap.docs.map((d) => {
       const data = d.data();
       return Object.assign({
         id: d.id,
         stats: computeStats(data.dailyCounts, data.scansTotal)
       }, data);
     });
+    cacheSet(key, list);
+    return list;
   }
 
   async function getVersion(qrId, versionId) {
@@ -273,6 +357,7 @@
     });
 
     await batch.commit();
+    cacheInvalidateQr(user.uid, qrId);
     return { versionId: newVersionRef.id, targetUrl: url };
   }
 
@@ -289,6 +374,7 @@
       title: name,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
+    cacheInvalidateQr(user.uid, qrId);
   }
 
   async function deactivateQr(qrId) {
@@ -302,6 +388,13 @@
       active: false,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
+    cacheInvalidateQr(user.uid, qrId);
+  }
+
+  function normalizeHex(value, fallback) {
+    const v = String(value || '').trim();
+    if (/^#[0-9a-fA-F]{6}$/.test(v)) return v.toUpperCase();
+    return fallback;
   }
 
   async function updateLandingSettings(qrId, settings) {
@@ -316,13 +409,35 @@
     if (isNaN(countdown)) countdown = 2;
     countdown = Math.max(0, Math.min(30, countdown));
 
-    const message = String(settings.landingMessage || '').trim().slice(0, 160);
     await qrRef.update({
       landingEnabled: !!settings.landingEnabled,
-      landingMessage: message,
+      landingTitle: String(settings.landingTitle || '').trim().slice(0, 80),
+      landingMessage: String(settings.landingMessage || '').trim().slice(0, 160),
+      landingCta: String(settings.landingCta || 'Abrir enlace').trim().slice(0, 40) || 'Abrir enlace',
       landingCountdown: countdown,
+      landingBg: normalizeHex(settings.landingBg, '#0B1220'),
+      landingAccent: normalizeHex(settings.landingAccent, '#7CF2D6'),
+      landingText: normalizeHex(settings.landingText, '#F4F7FB'),
+      landingShowBrand: settings.landingShowBrand !== false,
+      landingShowHost: settings.landingShowHost !== false,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
+    cacheInvalidateQr(user.uid, qrId);
+  }
+
+  async function updateQrStyle(qrId, style, styleName) {
+    const { auth, db } = init();
+    const user = auth.currentUser;
+    if (!user) throw new Error('Debes iniciar sesión.');
+    const qrRef = db.collection('dynamicQrs').doc(qrId);
+    const snap = await qrRef.get();
+    if (!snap.exists || snap.data().ownerId !== user.uid) throw new Error('QR no encontrado.');
+    await qrRef.update({
+      qrStyle: pickStyle(style || {}),
+      styleName: String(styleName || '').trim().slice(0, 80),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    cacheInvalidateQr(user.uid, qrId);
   }
 
   function buildDailySeries(dailyCounts, days) {
@@ -397,8 +512,15 @@
       title: qr.title || '',
       versionId: qr.currentVersionId,
       landingEnabled: landingEnabled,
+      landingTitle: qr.landingTitle || '',
       landingMessage: qr.landingMessage || '',
+      landingCta: qr.landingCta || 'Abrir enlace',
       landingCountdown: Math.max(0, Math.min(30, countdown)),
+      landingBg: qr.landingBg || '#0B1220',
+      landingAccent: qr.landingAccent || '#7CF2D6',
+      landingText: qr.landingText || '#F4F7FB',
+      landingShowBrand: qr.landingShowBrand !== false,
+      landingShowHost: qr.landingShowHost !== false,
       destinationHost: destinationHost(qr.targetUrl)
     };
   }
@@ -443,15 +565,23 @@
     return out;
   }
 
-  async function listDesignPresets() {
+  async function listDesignPresets(options) {
+    const opts = options || {};
     const { auth, db } = init();
     const user = auth.currentUser;
     if (!user) return [];
+    const key = cacheKey(['presets', user.uid]);
+    if (!opts.force) {
+      const cached = cacheGet(key);
+      if (cached) return cached;
+    }
     const snap = await db.collection('designPresets')
       .where('ownerId', '==', user.uid)
       .orderBy('updatedAt', 'desc')
       .get();
-    return snap.docs.map((d) => Object.assign({ id: d.id, source: 'cloud' }, d.data()));
+    const list = snap.docs.map((d) => Object.assign({ id: d.id, source: 'cloud' }, d.data()));
+    cacheSet(key, list);
+    return list;
   }
 
   async function saveDesignPreset({ name, style }) {
@@ -479,6 +609,7 @@
     }, pickStyle(style));
 
     await ref.set(payload);
+    cacheRemove(cacheKey(['presets', user.uid]));
     return Object.assign({ id: ref.id, source: 'cloud' }, payload, { name: cleanName });
   }
 
@@ -491,6 +622,7 @@
     if (!snap.exists) return;
     if (snap.data().ownerId !== user.uid) throw new Error('No tienes permiso.');
     await ref.delete();
+    cacheRemove(cacheKey(['presets', user.uid]));
   }
 
   /**
@@ -533,6 +665,7 @@
     }
 
     try { localStorage.setItem(flagKey, '1'); } catch (e) { /* ignore */ }
+    if (migrated > 0) cacheRemove(cacheKey(['presets', user.uid]));
     return migrated;
   }
 
@@ -562,11 +695,14 @@
     registerScanAndGetTarget,
     extractCodeFromLocation,
     updateLandingSettings,
+    updateQrStyle,
     buildDailySeries,
     destinationHost,
     listDesignPresets,
     saveDesignPreset,
     deleteDesignPreset,
-    migrateLocalDesignPresets
+    migrateLocalDesignPresets,
+    cacheInvalidateUser,
+    cacheInvalidateQr
   };
 })(window);
