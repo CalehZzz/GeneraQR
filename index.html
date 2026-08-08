@@ -1396,12 +1396,13 @@
 
       <div class="card">
         <p class="card-title">Guardar diseño</p>
-        <p class="card-subtitle">Guarda esta combinación de colores y formas para reutilizarla después. Se guarda en este navegador.</p>
+        <p class="card-subtitle" id="preset-subtitle">Guarda esta combinación de colores y formas. Con sesión de Google se guarda en tu cuenta; sin sesión, solo en este navegador.</p>
         <div class="field">
           <div class="preset-save-row">
             <input type="text" id="preset-name-input" placeholder="Nombre del diseño (ej. Mi negocio)" maxlength="40">
             <button type="button" class="primary" id="preset-save-btn">Guardar</button>
           </div>
+          <p class="field-hint" id="preset-storage-hint">Sin sesión: se guarda solo en este navegador.</p>
         </div>
         <div class="preset-list" id="preset-list"></div>
         <p class="preset-empty" id="preset-empty">Aún no tienes diseños guardados.</p>
@@ -2626,16 +2627,22 @@
     link.click();
   });
 
-  /* ---------- saved design presets ---------- */
+  /* ---------- saved design presets (cuenta Firebase o localStorage) ---------- */
   const PRESETS_KEY = 'generaqr_presets_v1';
+  let presetsCache = [];
+  let presetsCloudMode = false;
+  const presetStorageHint = document.getElementById('preset-storage-hint');
 
-  function getPresets(){
+  function getLocalPresets(){
     try{ return JSON.parse(localStorage.getItem(PRESETS_KEY) || '[]'); }
     catch(e){ return []; }
   }
-  function setPresets(list){
+  function setLocalPresets(list){
     try{ localStorage.setItem(PRESETS_KEY, JSON.stringify(list)); return true; }
     catch(e){ return false; }
+  }
+  function clearLocalPresets(){
+    try{ localStorage.removeItem(PRESETS_KEY); } catch(e){ /* ignore */ }
   }
   function escapeHtml(s){
     const d = document.createElement('div');
@@ -2660,6 +2667,7 @@
     container.querySelectorAll('.swatch').forEach(s => s.classList.toggle('active', s.dataset.value === value));
   }
   function applyColorGroupState(prefix, state){
+    if(!state) return;
     colorState[prefix] = JSON.parse(JSON.stringify(state));
     const modeButtons = document.querySelectorAll(`[data-mode-group="${prefix}"] button`);
     modeButtons.forEach(b => b.classList.toggle('active', b.dataset.mode === state.mode));
@@ -2676,8 +2684,16 @@
     angleInput.value = state.angle;
     document.querySelector(`[data-angle-val="${prefix}"]`).textContent = state.angle + '°';
   }
+  function updatePresetStorageHint(){
+    if(!presetStorageHint) return;
+    if(presetsCloudMode){
+      presetStorageHint.textContent = 'Guardado en tu cuenta de Google. Disponible en cualquier dispositivo al iniciar sesión.';
+    } else {
+      presetStorageHint.textContent = 'Sin sesión: se guarda solo en este navegador. Entra con Google para sincronizarlos en tu cuenta.';
+    }
+  }
   function applyPreset(id){
-    const preset = getPresets().find(p => p.id === id);
+    const preset = presetsCache.find(p => p.id === id);
     if(!preset) return;
 
     selectedDotsType = preset.dotsType;
@@ -2690,7 +2706,7 @@
     logoBgShape = preset.logoBgShape;
     setActiveInGroup('logo-bg-group', preset.logoBgShape);
 
-    ['dots','csquare','cdot'].forEach(prefix => applyColorGroupState(prefix, preset.colorState[prefix]));
+    ['dots','csquare','cdot'].forEach(prefix => applyColorGroupState(prefix, preset.colorState && preset.colorState[prefix]));
 
     bgColorInput.value = preset.bgColor;
     bgHex.value = preset.bgColor.toUpperCase();
@@ -2708,21 +2724,30 @@
     scheduleGenerate();
   }
   function renderPresets(){
-    const presets = getPresets();
+    const presets = presetsCache;
     presetListEl.innerHTML = '';
     presetEmpty.style.display = presets.length ? 'none' : 'block';
+    if(!presets.length){
+      presetEmpty.textContent = presetsCloudMode
+        ? 'Aún no tienes diseños en tu cuenta.'
+        : 'Aún no tienes diseños guardados.';
+    }
     presets.forEach(p => {
       const card = document.createElement('div');
       card.className = 'preset-card';
+      const badge = presetsCloudMode
+        ? '<span class="dyn-badge" style="margin-top:0;margin-left:6px;">Cuenta</span>'
+        : '<span class="dyn-badge muted" style="margin-top:0;margin-left:6px;">Local</span>';
+      const dotsColor = (p.colorState && p.colorState.dots && p.colorState.dots.color1) || '#1D1D1F';
       card.innerHTML = `
-        <div class="preset-swatch" style="background:${p.bgColor}">
-          <span class="preset-dot" style="background:${p.colorState.dots.color1}"></span>
+        <div class="preset-swatch" style="background:${escapeHtml(p.bgColor || '#fff')}">
+          <span class="preset-dot" style="background:${escapeHtml(dotsColor)}"></span>
         </div>
         <div class="preset-info">
-          <span class="preset-name">${escapeHtml(p.name)}</span>
+          <span class="preset-name">${escapeHtml(p.name)}${badge}</span>
           <div class="preset-actions">
-            <button type="button" class="pill-btn" data-apply="${p.id}">Usar</button>
-            <button type="button" class="pill-btn danger" data-del="${p.id}">Borrar</button>
+            <button type="button" class="pill-btn" data-apply="${escapeHtml(p.id)}">Usar</button>
+            <button type="button" class="pill-btn danger" data-del="${escapeHtml(p.id)}">Borrar</button>
           </div>
         </div>`;
       presetListEl.appendChild(card);
@@ -2731,26 +2756,109 @@
       btn.addEventListener('click', () => applyPreset(btn.dataset.apply));
     });
     presetListEl.querySelectorAll('[data-del]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        setPresets(getPresets().filter(p => p.id !== btn.dataset.del));
-        renderPresets();
-      });
+      btn.addEventListener('click', () => deletePreset(btn.dataset.del));
     });
+    updatePresetStorageHint();
   }
-  presetSaveBtn.addEventListener('click', () => {
+
+  async function deletePreset(id){
+    if(presetsCloudMode && window.GeneraQRFirebase){
+      try{
+        await window.GeneraQRFirebase.deleteDesignPreset(id);
+        presetsCache = presetsCache.filter(p => p.id !== id);
+        renderPresets();
+      } catch(err){
+        alert(err.message || 'No se pudo borrar el diseño.');
+      }
+      return;
+    }
+    presetsCache = getLocalPresets().filter(p => p.id !== id);
+    setLocalPresets(presetsCache);
+    renderPresets();
+  }
+
+  async function refreshPresetsFromCloud(){
+    if(!window.GeneraQRFirebase || !window.GeneraQRFirebase.isConfigured()) return false;
+    const user = window.GeneraQRFirebase.getCurrentUser && window.GeneraQRFirebase.getCurrentUser();
+    if(!user) return false;
+    const local = getLocalPresets();
+    if(local.length){
+      try{
+        const n = await window.GeneraQRFirebase.migrateLocalDesignPresets(local);
+        if(n > 0) clearLocalPresets();
+      } catch(err){
+        console.warn('Migración de diseños locales:', err);
+      }
+    }
+    presetsCache = await window.GeneraQRFirebase.listDesignPresets();
+    presetsCloudMode = true;
+    renderPresets();
+    return true;
+  }
+
+  function loadLocalPresetsIntoCache(){
+    presetsCache = getLocalPresets().map(p => Object.assign({}, p, { source: 'local' }));
+    presetsCloudMode = false;
+    renderPresets();
+  }
+
+  presetSaveBtn.addEventListener('click', async () => {
     const name = presetNameInput.value.trim() || 'Diseño sin nombre';
-    const presets = getPresets();
-    presets.unshift({ id: 'p' + Date.now(), name, ...currentStyleSnapshot() });
-    const ok = setPresets(presets.slice(0, 20));
+    const style = currentStyleSnapshot();
+
+    if(presetsCloudMode && window.GeneraQRFirebase){
+      presetSaveBtn.disabled = true;
+      try{
+        await window.GeneraQRFirebase.saveDesignPreset({ name, style });
+        presetNameInput.value = '';
+        await refreshPresetsFromCloud();
+      } catch(err){
+        console.error(err);
+        const msg = (err && err.code === 'failed-precondition')
+          ? 'Falta un índice en Firestore para designPresets. Abre el enlace del error en la consola del navegador.'
+          : (err.message || 'No se pudo guardar en tu cuenta.');
+        alert(msg);
+      } finally {
+        presetSaveBtn.disabled = false;
+      }
+      return;
+    }
+
+    const presets = getLocalPresets();
+    presets.unshift({ id: 'p' + Date.now(), name, ...style });
+    const ok = setLocalPresets(presets.slice(0, 20));
     if(!ok){
       presetEmpty.textContent = 'No se pudo guardar. Revisa los permisos de almacenamiento del navegador.';
       presetEmpty.style.display = 'block';
       return;
     }
     presetNameInput.value = '';
-    renderPresets();
+    loadLocalPresetsIntoCache();
   });
-  renderPresets();
+
+  // Sync con login Google: al entrar, diseños → cuenta; al salir, vuelve a local
+  function wirePresetAuthSync(){
+    loadLocalPresetsIntoCache();
+    try{
+      if(!window.GeneraQRFirebase || !window.GeneraQRFirebase.isConfigured()) return;
+      window.GeneraQRFirebase.init();
+      window.GeneraQRFirebase.onAuth(async (user) => {
+        if(user){
+          try{ await refreshPresetsFromCloud(); }
+          catch(err){
+            console.warn(err);
+            loadLocalPresetsIntoCache();
+          }
+        } else {
+          loadLocalPresetsIntoCache();
+        }
+      });
+    } catch(e){
+      console.warn(e);
+      loadLocalPresetsIntoCache();
+    }
+  }
+  wirePresetAuthSync();
 
   /* ---------- creative templates ---------- */
   /* Ordenadas de mayor a menor uso habitual. Cada una con paleta, tipografía,

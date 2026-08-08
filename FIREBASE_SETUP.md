@@ -1,6 +1,9 @@
 # Configuración de Firebase para QR dinámicos
 
-GeneraQR usa **Firebase Authentication (Google)** y **Cloud Firestore** para los códigos QR dinámicos: un enlace corto fijo (`https://generaqr.xyz/r/CODIGO`) que puedes redirigir a otra URL cuando quieras, con estadísticas de escaneos (hoy / mes / total) y **versiones separadas** cada vez que cambias el destino.
+GeneraQR usa **Firebase Authentication (Google)** y **Cloud Firestore** para:
+
+- **QR dinámicos**: enlace corto fijo (`https://generaqr.xyz/r/CODIGO`), destino editable, estadísticas (hoy / mes / total) y versiones al cambiar la URL
+- **Diseños guardados por cuenta**: colores/formas del diseñador sincronizados al iniciar sesión con Google
 
 ---
 
@@ -78,6 +81,13 @@ Para el historial de versiones hará falta otro índice de colección de grupo o
 
 De nuevo, el enlace del error en la consola del navegador es la forma más rápida de crearlo.
 
+Para los **diseños guardados por cuenta** (pestaña Descargar → Guardar diseño):
+
+- Colección: `designPresets`
+- Campos: `ownerId` Ascending + `updatedAt` Descending
+
+Al iniciar sesión, los diseños que tenías solo en el navegador se migran una vez a tu cuenta.
+
 ## 6. Google Cloud / OAuth (pantalla de consentimiento)
 
 Si Google te pide configurar la pantalla OAuth:
@@ -128,9 +138,10 @@ Por cada versión del enlace:
 - [ ] Dominios autorizados (`generaqr.xyz`, `localhost`)
 - [ ] Firestore creado
 - [ ] Reglas de `firestore.rules` publicadas
-- [ ] Índice `ownerId` + `updatedAt` creado
+- [ ] Índices: `dynamicQrs`, `versions` y `designPresets` (ownerId + fecha)
 - [ ] OAuth consent screen / usuarios de prueba si aplica
 - [ ] Probar: login → crear QR → abrir `/r/CODIGO` → ver +1 en estadísticas → cambiar URL → ver versión nueva en cero
+- [ ] Probar: login → Guardar diseño → cerrar sesión / otro dispositivo → ver el mismo diseño
 
 ## 10. Notas de seguridad
 

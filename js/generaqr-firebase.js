@@ -364,6 +364,121 @@
     return '';
   }
 
+  function getCurrentUser() {
+    try {
+      const { auth } = init();
+      return auth.currentUser;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  const STYLE_KEYS = [
+    'dotsType', 'csquareType', 'cdotType', 'colorState',
+    'bgColor', 'logoBgShape', 'logoSize', 'logoPadding', 'targetSize'
+  ];
+
+  function pickStyle(style) {
+    const out = {};
+    STYLE_KEYS.forEach((k) => {
+      if (style && style[k] !== undefined) out[k] = style[k];
+    });
+    return out;
+  }
+
+  async function listDesignPresets() {
+    const { auth, db } = init();
+    const user = auth.currentUser;
+    if (!user) return [];
+    const snap = await db.collection('designPresets')
+      .where('ownerId', '==', user.uid)
+      .orderBy('updatedAt', 'desc')
+      .get();
+    return snap.docs.map((d) => Object.assign({ id: d.id, source: 'cloud' }, d.data()));
+  }
+
+  async function saveDesignPreset({ name, style }) {
+    const { auth, db } = init();
+    const user = auth.currentUser;
+    if (!user) throw new Error('Debes iniciar sesión para guardar en tu cuenta.');
+
+    const cleanName = String(name || '').trim() || 'Diseño sin nombre';
+    if (cleanName.length > 80) throw new Error('El nombre es demasiado largo.');
+
+    const existing = await db.collection('designPresets')
+      .where('ownerId', '==', user.uid)
+      .get();
+    if (existing.size >= 40) {
+      throw new Error('Límite de 40 diseños por cuenta. Borra alguno para guardar otro.');
+    }
+
+    const now = firebase.firestore.FieldValue.serverTimestamp();
+    const ref = db.collection('designPresets').doc();
+    const payload = Object.assign({
+      ownerId: user.uid,
+      name: cleanName,
+      createdAt: now,
+      updatedAt: now
+    }, pickStyle(style));
+
+    await ref.set(payload);
+    return Object.assign({ id: ref.id, source: 'cloud' }, payload, { name: cleanName });
+  }
+
+  async function deleteDesignPreset(id) {
+    const { auth, db } = init();
+    const user = auth.currentUser;
+    if (!user) throw new Error('Debes iniciar sesión.');
+    const ref = db.collection('designPresets').doc(id);
+    const snap = await ref.get();
+    if (!snap.exists) return;
+    if (snap.data().ownerId !== user.uid) throw new Error('No tienes permiso.');
+    await ref.delete();
+  }
+
+  /**
+   * Sube diseños locales del navegador a la cuenta (una sola vez por navegador).
+   * Devuelve cuántos se migraron.
+   */
+  async function migrateLocalDesignPresets(localList) {
+    const { auth, db } = init();
+    const user = auth.currentUser;
+    if (!user || !localList || !localList.length) return 0;
+
+    const flagKey = 'generaqr_presets_migrated_' + user.uid;
+    try {
+      if (localStorage.getItem(flagKey) === '1') return 0;
+    } catch (e) { /* ignore */ }
+
+    const existing = await db.collection('designPresets')
+      .where('ownerId', '==', user.uid)
+      .get();
+    const existingNames = new Set(existing.docs.map((d) => (d.data().name || '').toLowerCase()));
+
+    let migrated = 0;
+    const room = Math.max(0, 40 - existing.size);
+    const toUpload = localList.slice(0, room);
+
+    for (let i = 0; i < toUpload.length; i++) {
+      const item = toUpload[i];
+      const name = String(item.name || 'Diseño importado').trim().slice(0, 80);
+      if (existingNames.has(name.toLowerCase())) continue;
+      const now = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('designPresets').doc().set(Object.assign({
+        ownerId: user.uid,
+        name: name,
+        createdAt: now,
+        updatedAt: now,
+        migratedFromLocal: true
+      }, pickStyle(item)));
+      existingNames.add(name.toLowerCase());
+      migrated++;
+    }
+
+    try { localStorage.setItem(flagKey, '1'); } catch (e) { /* ignore */ }
+    return migrated;
+  }
+
   global.GeneraQRFirebase = {
     isConfigured,
     init,
@@ -378,6 +493,7 @@
     signInWithGoogle,
     signOut,
     onAuth,
+    getCurrentUser,
     createDynamicQr,
     listMyDynamicQrs,
     getDynamicQr,
@@ -387,6 +503,10 @@
     updateTitle,
     deactivateQr,
     registerScanAndGetTarget,
-    extractCodeFromLocation
+    extractCodeFromLocation,
+    listDesignPresets,
+    saveDesignPreset,
+    deleteDesignPreset,
+    migrateLocalDesignPresets
   };
 })(window);
