@@ -75,6 +75,35 @@
   wireCollapsibleToggle('tpl-preview-toggle', document.getElementById('tpl-canvas-wrap'));
   const metaSize = document.getElementById('meta-size');
 
+  /* En móvil (Diseñador): el preview sticky se encoge al scrollear */
+  (function wireDesignerPreviewShrink(){
+    const previewCard = document.getElementById('preview-card');
+    if(!previewCard) return;
+    const mq = window.matchMedia('(max-width:900px)');
+    const update = () => {
+      const designerActive = !!document.querySelector('.mode-panel[data-mode-panel="designer"].active');
+      if(!mq.matches || !designerActive || previewCard.classList.contains('collapsed')){
+        previewCard.style.setProperty('--designer-qr-size', '200px');
+        previewCard.classList.remove('is-compact');
+        return;
+      }
+      const y = window.scrollY || document.documentElement.scrollTop || 0;
+      const t = Math.min(1, Math.max(0, y / 200));
+      // 200px → 96px
+      const size = Math.round(200 - t * 104);
+      previewCard.style.setProperty('--designer-qr-size', size + 'px');
+      previewCard.classList.toggle('is-compact', size < 140);
+    };
+    window.addEventListener('scroll', update, { passive:true });
+    window.addEventListener('resize', update);
+    document.querySelectorAll('#mode-toggle .mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => setTimeout(update, 0));
+    });
+    const toggle = document.getElementById('preview-toggle');
+    if(toggle) toggle.addEventListener('click', () => setTimeout(update, 0));
+    update();
+  })();
+
   const presetNameInput = document.getElementById('preset-name-input');
   const presetSaveBtn = document.getElementById('preset-save-btn');
   const presetListEl = document.getElementById('preset-list');
