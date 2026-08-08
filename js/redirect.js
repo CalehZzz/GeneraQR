@@ -1,5 +1,5 @@
 /**
- * Página de redirección de QR dinámicos.
+ * Página intermedia / redirección de QR dinámicos.
  * URL corta: https://generaqr.xyz/r/CODIGO  (vía 404.html)
  * Alternativa: https://generaqr.xyz/d.html?c=CODIGO
  */
@@ -9,6 +9,16 @@
   const statusEl = document.getElementById('redirect-status');
   const detailEl = document.getElementById('redirect-detail');
   const homeLink = document.getElementById('redirect-home');
+  const titleEl = document.getElementById('landing-title');
+  const messageEl = document.getElementById('landing-message');
+  const hostEl = document.getElementById('landing-host');
+  const ctaBtn = document.getElementById('landing-cta');
+  const countdownEl = document.getElementById('landing-countdown');
+  const skipLink = document.getElementById('landing-skip');
+
+  let targetUrl = '';
+  let timer = null;
+  let remaining = 0;
 
   function setStatus(title, detail, isError) {
     if (statusEl) statusEl.textContent = title;
@@ -17,6 +27,65 @@
       detailEl.style.display = detail ? 'block' : 'none';
     }
     document.body.classList.toggle('is-error', !!isError);
+    document.body.classList.remove('is-ready');
+  }
+
+  function goNow() {
+    if (!targetUrl) return;
+    if (timer) clearInterval(timer);
+    if (ctaBtn) ctaBtn.disabled = true;
+    window.location.replace(targetUrl);
+  }
+
+  function startCountdown(seconds) {
+    remaining = seconds;
+    if (!countdownEl) return;
+    if (seconds <= 0) {
+      countdownEl.textContent = '';
+      if (skipLink) skipLink.hidden = true;
+      return;
+    }
+    if (skipLink) skipLink.hidden = false;
+    const tick = function () {
+      countdownEl.textContent = remaining > 0
+        ? ('Redirección automática en ' + remaining + 's…')
+        : 'Abriendo…';
+      if (remaining <= 0) {
+        clearInterval(timer);
+        goNow();
+        return;
+      }
+      remaining -= 1;
+    };
+    tick();
+    timer = setInterval(tick, 1000);
+  }
+
+  function showLanding(result) {
+    targetUrl = result.targetUrl;
+    document.body.classList.remove('is-error');
+    document.body.classList.add('is-ready');
+    document.title = (result.title || 'Abrir enlace') + ' · GeneraQR';
+
+    if (titleEl) titleEl.textContent = result.title || 'Continuar al enlace';
+    if (messageEl) {
+      const msg = (result.landingMessage || '').trim();
+      messageEl.textContent = msg || 'Estás a punto de abrir el destino de este código QR.';
+      messageEl.style.display = 'block';
+    }
+    if (hostEl) hostEl.textContent = result.destinationHost || result.targetUrl;
+    if (ctaBtn) {
+      ctaBtn.disabled = false;
+      ctaBtn.onclick = goNow;
+    }
+    if (skipLink) {
+      skipLink.href = result.targetUrl;
+      skipLink.onclick = function (e) {
+        e.preventDefault();
+        goNow();
+      };
+    }
+    startCountdown(result.landingCountdown || 0);
   }
 
   async function run() {
@@ -42,16 +111,21 @@
       return;
     }
 
-    setStatus('Redirigiendo…', 'Registrando escaneo y abriendo el destino.');
+    setStatus('Preparando enlace…', 'Registrando escaneo.');
 
     try {
       api.init();
       const result = await api.registerScanAndGetTarget(code);
-      setStatus('Listo', 'Abriendo ' + result.targetUrl);
-      // Pequeña pausa para que el update de Firestore salga antes de navegar
-      setTimeout(function () {
-        window.location.replace(result.targetUrl);
-      }, 120);
+
+      // Sin página intermedia → redirect inmediato
+      if (result.landingEnabled === false) {
+        setStatus('Listo', 'Abriendo ' + result.targetUrl);
+        targetUrl = result.targetUrl;
+        setTimeout(goNow, 120);
+        return;
+      }
+
+      showLanding(result);
     } catch (err) {
       console.error(err);
       const msg = (err && err.message) || 'No se pudo abrir este QR.';

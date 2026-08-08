@@ -173,7 +173,10 @@
       currentVersionId: versionRef.id,
       createdAt: now,
       updatedAt: now,
-      active: true
+      active: true,
+      landingEnabled: true,
+      landingMessage: '',
+      landingCountdown: 5
     });
 
     await batch.commit();
@@ -301,8 +304,55 @@
     });
   }
 
+  async function updateLandingSettings(qrId, settings) {
+    const { auth, db } = init();
+    const user = auth.currentUser;
+    if (!user) throw new Error('Debes iniciar sesión.');
+    const qrRef = db.collection('dynamicQrs').doc(qrId);
+    const snap = await qrRef.get();
+    if (!snap.exists || snap.data().ownerId !== user.uid) throw new Error('QR no encontrado.');
+
+    let countdown = parseInt(settings.landingCountdown, 10);
+    if (isNaN(countdown)) countdown = 5;
+    countdown = Math.max(0, Math.min(30, countdown));
+
+    const message = String(settings.landingMessage || '').trim().slice(0, 160);
+    await qrRef.update({
+      landingEnabled: !!settings.landingEnabled,
+      landingMessage: message,
+      landingCountdown: countdown,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }
+
+  function buildDailySeries(dailyCounts, days) {
+    const n = days || 14;
+    const counts = dailyCounts || {};
+    const series = [];
+    const now = new Date();
+    for (let i = n - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+      const key = todayKey(d);
+      series.push({
+        date: key,
+        label: String(d.getDate()),
+        count: Number(counts[key]) || 0
+      });
+    }
+    return series;
+  }
+
+  function destinationHost(url) {
+    try {
+      const u = new URL(normalizeUrl(url));
+      return u.host || url;
+    } catch (e) {
+      return String(url || '').replace(/^https?:\/\//i, '').split('/')[0] || url;
+    }
+  }
+
   /**
-   * Registra un escaneo y devuelve la URL de destino.
+   * Registra un escaneo y devuelve la URL de destino + opciones de landing.
    * Usado por la página de redirección (/r/CODE).
    */
   async function registerScanAndGetTarget(code) {
@@ -339,10 +389,18 @@
       console.warn('No se pudo registrar el escaneo:', e);
     }
 
+    const landingEnabled = qr.landingEnabled !== false;
+    let countdown = parseInt(qr.landingCountdown, 10);
+    if (isNaN(countdown)) countdown = 5;
+
     return {
       targetUrl: qr.targetUrl,
       title: qr.title || '',
-      versionId: qr.currentVersionId
+      versionId: qr.currentVersionId,
+      landingEnabled: landingEnabled,
+      landingMessage: qr.landingMessage || '',
+      landingCountdown: Math.max(0, Math.min(30, countdown)),
+      destinationHost: destinationHost(qr.targetUrl)
     };
   }
 
@@ -504,6 +562,9 @@
     deactivateQr,
     registerScanAndGetTarget,
     extractCodeFromLocation,
+    updateLandingSettings,
+    buildDailySeries,
+    destinationHost,
     listDesignPresets,
     saveDesignPreset,
     deleteDesignPreset,

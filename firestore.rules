@@ -62,7 +62,14 @@ service cloud.firestore {
         && request.resource.data.title.size() > 0
         && request.resource.data.title.size() <= 80
         && isValidUrl(request.resource.data.targetUrl)
-        && request.resource.data.active == true;
+        && request.resource.data.active == true
+        && (!('landingMessage' in request.resource.data)
+            || (request.resource.data.landingMessage is string
+                && request.resource.data.landingMessage.size() <= 160))
+        && (!('landingCountdown' in request.resource.data)
+            || (request.resource.data.landingCountdown is int
+                && request.resource.data.landingCountdown >= 0
+                && request.resource.data.landingCountdown <= 30));
 
       allow update: if isOwner(resource.data.ownerId)
         && request.resource.data.ownerId == resource.data.ownerId
