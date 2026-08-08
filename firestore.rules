@@ -23,6 +23,30 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['email', 'displayName', 'photoURL', 'createdAt', 'updatedAt']);
     }
 
+    // Diseños / plantillas de estilo guardados por cuenta
+    match /designPresets/{presetId} {
+      allow read: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+
+      allow create: if isSignedIn()
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 80
+        && request.resource.data.keys().hasAll([
+          'ownerId', 'name', 'dotsType', 'csquareType', 'cdotType',
+          'colorState', 'bgColor', 'logoBgShape', 'logoSize', 'logoPadding',
+          'targetSize', 'createdAt', 'updatedAt'
+        ]);
+
+      allow update: if isOwner(resource.data.ownerId)
+        && request.resource.data.ownerId == resource.data.ownerId
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 80;
+
+      allow delete: if isOwner(resource.data.ownerId);
+    }
+
     match /dynamicQrs/{qrId} {
       // Lectura pública: la página de redirección necesita targetUrl y currentVersionId
       allow get: if true;
@@ -38,7 +62,14 @@ service cloud.firestore {
         && request.resource.data.title.size() > 0
         && request.resource.data.title.size() <= 80
         && isValidUrl(request.resource.data.targetUrl)
-        && request.resource.data.active == true;
+        && request.resource.data.active == true
+        && (!('landingMessage' in request.resource.data)
+            || (request.resource.data.landingMessage is string
+                && request.resource.data.landingMessage.size() <= 160))
+        && (!('landingCountdown' in request.resource.data)
+            || (request.resource.data.landingCountdown is int
+                && request.resource.data.landingCountdown >= 0
+                && request.resource.data.landingCountdown <= 30));
 
       allow update: if isOwner(resource.data.ownerId)
         && request.resource.data.ownerId == resource.data.ownerId

@@ -234,8 +234,40 @@
         : 'Las estadísticas de arriba son de la versión actual del enlace. Si cambias la URL, se reinician los contadores en una versión nueva.';
     }
 
+    const landingEnabled = $('dyn-landing-enabled');
+    const landingMessage = $('dyn-landing-message');
+    const landingCountdown = $('dyn-landing-countdown');
+    if (landingEnabled) landingEnabled.checked = detailQr.landingEnabled === true;
+    if (landingMessage) landingMessage.value = detailQr.landingMessage || '';
+    if (landingCountdown) {
+      const c = parseInt(detailQr.landingCountdown, 10);
+      landingCountdown.value = String(isNaN(c) ? 2 : c);
+    }
+
+    renderChart(ver && ver.dailyCounts);
     renderVersions();
     renderPreview(shortUrl);
+  }
+
+  function renderChart(dailyCounts) {
+    const chart = $('dyn-chart');
+    const peakEl = $('dyn-chart-peak');
+    if (!chart) return;
+    const series = api().buildDailySeries(dailyCounts || {}, 14);
+    const max = Math.max.apply(null, series.map((p) => p.count).concat([0]));
+    if (peakEl) peakEl.textContent = max > 0 ? ('Pico: ' + max) : 'Sin escaneos aún';
+    chart.innerHTML = '';
+    if (max === 0) {
+      chart.innerHTML = '<div class="dyn-chart-empty" style="width:100%;">Todavía no hay escaneos en estos 14 días.</div>';
+      return;
+    }
+    series.forEach((p) => {
+      const col = document.createElement('div');
+      col.className = 'dyn-chart-bar';
+      const h = Math.max(3, Math.round((p.count / max) * 100));
+      col.innerHTML = '<i style="height:' + h + '%" title="' + escapeHtml(p.date) + ': ' + p.count + '"></i><em>' + escapeHtml(p.label) + '</em>';
+      chart.appendChild(col);
+    });
   }
 
   function renderVersions() {
@@ -361,6 +393,26 @@
     }
   }
 
+  async function handleLandingSave(e) {
+    e.preventDefault();
+    if (!selectedQrId) return;
+    const btn = $('dyn-landing-save-btn');
+    if (btn) btn.disabled = true;
+    try {
+      await api().updateLandingSettings(selectedQrId, {
+        landingEnabled: !!($('dyn-landing-enabled') && $('dyn-landing-enabled').checked),
+        landingMessage: ($('dyn-landing-message') && $('dyn-landing-message').value) || '',
+        landingCountdown: ($('dyn-landing-countdown') && $('dyn-landing-countdown').value) || 2
+      });
+      showToast('Página intermedia guardada');
+      await openDetail(selectedQrId);
+    } catch (err) {
+      showToast(err.message || 'Error al guardar', true);
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
   async function copyShortLink() {
     if (!detailQr) return;
     const url = api().shortLink(detailQr.id);
@@ -402,6 +454,9 @@
 
     const titleForm = $('dyn-title-form');
     if (titleForm) titleForm.addEventListener('submit', handleSaveTitle);
+
+    const landingForm = $('dyn-landing-form');
+    if (landingForm) landingForm.addEventListener('submit', handleLandingSave);
 
     const copyBtn = $('dyn-copy-link');
     if (copyBtn) copyBtn.addEventListener('click', copyShortLink);

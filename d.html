@@ -3,52 +3,79 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Redirigiendo… · GeneraQR</title>
+<title>Abrir enlace · GeneraQR</title>
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#0A84FF">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230A84FF'/%3E%3Crect x='20' y='20' width='22' height='22' rx='4' fill='white'/%3E%3Crect x='58' y='20' width='22' height='22' rx='4' fill='white'/%3E%3Crect x='20' y='58' width='22' height='22' rx='4' fill='white'/%3E%3Crect x='62' y='62' width='14' height='14' rx='3' fill='white'/%3E%3C/svg%3E">
 <style>
   :root{
-    --bg:#F5F5F7; --text:#1D1D1F; --text-dim:#6E6E73;
-    --accent:#0A84FF; --surface:#fff; --border:#E5E5EA;
+    --bg0:#0B1220; --bg1:#152238; --text:#F4F7FB;
+    --text-dim:rgba(244,247,251,0.72); --accent:#3BA0FF; --accent-2:#7CF2D6;
+    --surface:rgba(255,255,255,0.08); --border:rgba(255,255,255,0.14);
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;min-height:100%;}
   body{
-    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-    background:var(--bg); color:var(--text);
-    display:flex; align-items:center; justify-content:center;
-    min-height:100vh; padding:24px;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    color:var(--text); min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:28px 18px;
+    background:
+      radial-gradient(900px 500px at 10% -10%, rgba(59,160,255,0.35), transparent 55%),
+      radial-gradient(700px 420px at 100% 110%, rgba(124,242,214,0.22), transparent 50%),
+      linear-gradient(160deg, var(--bg0), var(--bg1));
   }
-  body.is-error .spinner{display:none;}
   .card{
-    background:var(--surface); border-radius:22px;
-    padding:36px 28px; max-width:420px; width:100%;
-    text-align:center;
-    box-shadow:0 2px 8px rgba(0,0,0,.04), 0 10px 30px rgba(0,0,0,.06);
+    width:100%; max-width:440px; background:var(--surface); border:1px solid var(--border);
+    border-radius:28px; padding:34px 28px 28px; backdrop-filter:blur(18px);
+    box-shadow:0 20px 60px rgba(0,0,0,0.35); text-align:center;
   }
-  .brand{font-weight:800; font-size:15px; color:var(--accent); letter-spacing:-0.01em; margin-bottom:18px;}
-  h1{font-size:22px; margin:0 0 8px; letter-spacing:-0.02em;}
-  p{margin:0; color:var(--text-dim); font-size:14px; line-height:1.5; word-break:break-word;}
+  .brand{font-weight:800; font-size:13px; letter-spacing:0.08em; text-transform:uppercase; color:var(--accent-2); margin-bottom:22px;}
   .spinner{
-    width:36px; height:36px; margin:0 auto 18px;
-    border:3px solid var(--border); border-top-color:var(--accent);
-    border-radius:50%; animation:spin .7s linear infinite;
+    width:38px;height:38px;margin:0 auto 18px; border:3px solid rgba(255,255,255,0.15);
+    border-top-color:var(--accent); border-radius:50%; animation:spin .7s linear infinite;
   }
   @keyframes spin{to{transform:rotate(360deg);}}
-  a.home{
-    display:inline-block; margin-top:20px; color:var(--accent);
-    font-weight:600; font-size:14px; text-decoration:none;
+  h1{font-size:clamp(24px,5vw,32px); line-height:1.15; letter-spacing:-0.02em; margin:0 0 10px;}
+  .message{margin:0 0 18px; color:var(--text-dim); font-size:15px; line-height:1.5;}
+  .dest{
+    display:inline-flex; align-items:center; gap:8px; max-width:100%;
+    padding:10px 14px; border-radius:999px; background:rgba(0,0,0,0.22);
+    border:1px solid var(--border); color:var(--text); font-size:13px; font-weight:600;
+    word-break:break-all; margin-bottom:22px;
   }
-  a.home:hover{text-decoration:underline;}
+  .dest span{opacity:0.7;font-weight:500;}
+  .cta{
+    display:block; width:100%; border:none; border-radius:16px; padding:15px 18px;
+    font:inherit; font-weight:700; font-size:15px; color:#041018;
+    background:linear-gradient(135deg, var(--accent-2), #5AD0FF); cursor:pointer;
+  }
+  .cta:disabled{opacity:0.6;cursor:wait;}
+  .countdown{margin:14px 0 0; font-size:13px; color:var(--text-dim); min-height:1.2em;}
+  .skip{display:inline-block; margin-top:14px; color:var(--text-dim); font-size:13px; font-weight:600; text-decoration:none;}
+  .home{display:inline-block; margin-top:18px; color:var(--accent); font-weight:600; font-size:13px; text-decoration:none;}
+  body.is-error .spinner{display:none;}
+  body.is-ready .spinner{display:none;}
+  #landing-ready{display:none;}
+  body.is-ready #landing-ready{display:block;}
+  body.is-ready #landing-loading{display:none;}
 </style>
 </head>
 <body>
   <div class="card">
     <div class="brand">GeneraQR</div>
-    <div class="spinner" aria-hidden="true"></div>
-    <h1 id="redirect-status">Redirigiendo…</h1>
-    <p id="redirect-detail">Un momento.</p>
+    <div id="landing-loading">
+      <div class="spinner" aria-hidden="true"></div>
+      <h1 id="redirect-status">Abriendo…</h1>
+      <p class="message" id="redirect-detail"></p>
+    </div>
+    <div id="landing-ready">
+      <h1 id="landing-title">Continuar</h1>
+      <p class="message" id="landing-message"></p>
+      <div class="dest" id="landing-dest"><span>Ir a</span> <strong id="landing-host">—</strong></div>
+      <button type="button" class="cta" id="landing-cta">Abrir enlace</button>
+      <p class="countdown" id="landing-countdown"></p>
+      <a class="skip" id="landing-skip" href="#" hidden>Abrir ahora</a>
+    </div>
     <a class="home" id="redirect-home" href="/" hidden>Volver a GeneraQR</a>
   </div>
 
