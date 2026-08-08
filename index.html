@@ -765,22 +765,92 @@
 
               <form id="dyn-landing-form" class="dyn-landing-card">
                 <p class="card-title" style="margin-bottom:6px;">Página intermedia</p>
-                <p class="card-subtitle" style="margin-bottom:12px;">Antes de abrir el destino, el visitante ve una pantalla con tu mensaje y un botón.</p>
+                <p class="card-subtitle" style="margin-bottom:12px;">Personaliza la pantalla que ve el visitante antes de abrir el destino. Vista previa abajo.</p>
                 <label class="toggle-row" style="margin-bottom:12px;">
                   <input type="checkbox" id="dyn-landing-enabled">
                   <span>Mostrar página intermedia al escanear</span>
                 </label>
-                <div class="field">
-                  <label class="field-label" for="dyn-landing-message">Mensaje (opcional)</label>
-                  <input type="text" id="dyn-landing-message" maxlength="160" placeholder="Gracias por escanear · entra a la promo">
-                </div>
-                <div class="field" style="margin-bottom:8px;">
-                  <label class="field-label" for="dyn-landing-countdown">Auto-redirección (segundos)</label>
-                  <div class="preset-save-row">
-                    <input type="number" id="dyn-landing-countdown" min="0" max="30" value="2" style="flex:1;">
-                    <button type="submit" class="primary" id="dyn-landing-save-btn">Guardar</button>
+                <div class="dyn-landing-grid">
+                  <div class="field">
+                    <label class="field-label" for="dyn-landing-title">Título</label>
+                    <input type="text" id="dyn-landing-title" maxlength="80" placeholder="Continuar al enlace">
                   </div>
-                  <p class="field-hint">Por defecto el QR redirige al instante. Activa la página intermedia solo si la necesitas. Usa 0 para avanzar solo con el botón.</p>
+                  <div class="field">
+                    <label class="field-label" for="dyn-landing-cta">Texto del botón</label>
+                    <input type="text" id="dyn-landing-cta" maxlength="40" placeholder="Abrir enlace">
+                  </div>
+                  <div class="field" style="grid-column:1 / -1;">
+                    <label class="field-label" for="dyn-landing-message">Mensaje</label>
+                    <input type="text" id="dyn-landing-message" maxlength="160" placeholder="Gracias por escanear · entra a la promo">
+                  </div>
+                  <div class="field">
+                    <label class="field-label" for="dyn-landing-bg">Color de fondo</label>
+                    <div class="swatch-input">
+                      <input type="color" id="dyn-landing-bg" value="#0B1220">
+                      <input type="text" class="hex-val" id="dyn-landing-bg-hex" value="#0B1220" maxlength="7" spellcheck="false" autocomplete="off">
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label class="field-label" for="dyn-landing-accent">Color de acento</label>
+                    <div class="swatch-input">
+                      <input type="color" id="dyn-landing-accent" value="#7CF2D6">
+                      <input type="text" class="hex-val" id="dyn-landing-accent-hex" value="#7CF2D6" maxlength="7" spellcheck="false" autocomplete="off">
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label class="field-label" for="dyn-landing-text">Color de texto</label>
+                    <div class="swatch-input">
+                      <input type="color" id="dyn-landing-text" value="#F4F7FB">
+                      <input type="text" class="hex-val" id="dyn-landing-text-hex" value="#F4F7FB" maxlength="7" spellcheck="false" autocomplete="off">
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label class="field-label" for="dyn-landing-countdown">Auto-redirección (segundos)</label>
+                    <input type="number" id="dyn-landing-countdown" min="0" max="30" value="2">
+                  </div>
+                </div>
+                <label class="toggle-row" style="margin:10px 0;">
+                  <input type="checkbox" id="dyn-landing-show-brand" checked>
+                  <span>Mostrar marca GeneraQR</span>
+                </label>
+                <label class="toggle-row" style="margin-bottom:12px;">
+                  <input type="checkbox" id="dyn-landing-show-host" checked>
+                  <span>Mostrar dominio de destino</span>
+                </label>
+                <button type="submit" class="primary" id="dyn-landing-save-btn" style="width:100%;">Guardar página intermedia</button>
+                <p class="field-hint" style="margin-top:8px;">Por defecto el QR redirige al instante. Activa la página intermedia solo si la necesitas. Usa 0 segundos para avanzar solo con el botón.</p>
+
+                <div class="dyn-device-previews" id="dyn-landing-previews" aria-label="Vista previa de la página intermedia">
+                  <div class="dyn-device">
+                    <div class="phone-frame">
+                      <div class="landing-mini" data-landing-preview>
+                        <div class="lm-brand" data-lp="brand">GeneraQR</div>
+                        <p class="lm-title" data-lp="title">Continuar</p>
+                        <p class="lm-msg" data-lp="msg">Tu mensaje aquí</p>
+                        <div class="lm-host" data-lp="host">tusitio.com</div>
+                        <button type="button" class="lm-cta" data-lp="cta">Abrir enlace</button>
+                        <div class="lm-count" data-lp="count">Redirección en 2s…</div>
+                      </div>
+                    </div>
+                    <span>iPhone</span>
+                  </div>
+                  <div class="dyn-device">
+                    <div class="laptop-frame">
+                      <div class="laptop-screen">
+                        <div class="landing-mini" data-landing-preview>
+                          <div class="lm-brand" data-lp="brand">GeneraQR</div>
+                          <p class="lm-title" data-lp="title">Continuar</p>
+                          <p class="lm-msg" data-lp="msg">Tu mensaje aquí</p>
+                          <div class="lm-host" data-lp="host">tusitio.com</div>
+                          <button type="button" class="lm-cta" data-lp="cta">Abrir enlace</button>
+                          <div class="lm-count" data-lp="count">Redirección en 2s…</div>
+                        </div>
+                      </div>
+                      <div class="laptop-notch"></div>
+                      <div class="laptop-base"></div>
+                    </div>
+                    <span>Computadora</span>
+                  </div>
                 </div>
               </form>
 
@@ -792,15 +862,32 @@
               <div id="dyn-versions"></div>
             </div>
 
-            <div class="dyn-qr-box">
-              <p class="field-label" style="margin-bottom:10px;">Código para imprimir</p>
+            <aside class="dyn-qr-box" id="dyn-qr-box">
+              <p class="field-label">Código para imprimir</p>
               <div id="dyn-qr-holder"></div>
-              <button type="button" class="primary" id="dyn-download-qr" style="width:100%;margin-top:12px;">Descargar PNG</button>
-              <p class="field-hint" style="margin-top:10px;">Este QR apunta al enlace corto. Puedes personalizarlo también en el Diseñador pegando el mismo enlace.</p>
-            </div>
+              <p class="dyn-style-note" id="dyn-style-note">Estilo por defecto</p>
+              <div class="dyn-qr-actions">
+                <button type="button" class="primary" id="dyn-download-qr">Descargar PNG</button>
+                <button type="button" class="ghost" id="dyn-use-preset-btn">Usar diseño guardado</button>
+                <button type="button" class="ghost" id="dyn-open-designer-btn">Diseñar</button>
+              </div>
+              <p class="field-hint" style="margin-top:10px;">“Diseñar” abre el Diseñador con este enlace corto. “Usar diseño guardado” aplica un estilo de tu cuenta a este QR.</p>
+            </aside>
           </div>
         </section>
       </div>
+    </div>
+  </div>
+
+  <div id="dyn-preset-modal" class="dyn-modal-backdrop" hidden>
+    <div class="dyn-modal" role="dialog" aria-modal="true" aria-labelledby="dyn-preset-modal-title">
+      <div class="dyn-modal-head">
+        <h3 id="dyn-preset-modal-title">Diseños guardados</h3>
+        <button type="button" class="pill-btn" id="dyn-preset-modal-close">Cerrar</button>
+      </div>
+      <p class="field-hint" style="margin-top:0;">Elige un diseño de tu cuenta para este QR dinámico.</p>
+      <div class="dyn-preset-pick" id="dyn-preset-pick-list"></div>
+      <p class="dyn-empty" id="dyn-preset-pick-empty" hidden>No tienes diseños guardados. Guarda uno en el Diseñador (pestaña Descargar).</p>
     </div>
   </div>
 

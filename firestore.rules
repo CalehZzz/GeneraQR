@@ -66,6 +66,12 @@ service cloud.firestore {
         && (!('landingMessage' in request.resource.data)
             || (request.resource.data.landingMessage is string
                 && request.resource.data.landingMessage.size() <= 160))
+        && (!('landingTitle' in request.resource.data)
+            || (request.resource.data.landingTitle is string
+                && request.resource.data.landingTitle.size() <= 80))
+        && (!('landingCta' in request.resource.data)
+            || (request.resource.data.landingCta is string
+                && request.resource.data.landingCta.size() <= 40))
         && (!('landingCountdown' in request.resource.data)
             || (request.resource.data.landingCountdown is int
                 && request.resource.data.landingCountdown >= 0
@@ -74,7 +80,16 @@ service cloud.firestore {
       allow update: if isOwner(resource.data.ownerId)
         && request.resource.data.ownerId == resource.data.ownerId
         && (!('targetUrl' in request.resource.data)
-            || isValidUrl(request.resource.data.targetUrl));
+            || isValidUrl(request.resource.data.targetUrl))
+        && (!('landingMessage' in request.resource.data)
+            || (request.resource.data.landingMessage is string
+                && request.resource.data.landingMessage.size() <= 160))
+        && (!('landingTitle' in request.resource.data)
+            || (request.resource.data.landingTitle is string
+                && request.resource.data.landingTitle.size() <= 80))
+        && (!('landingCta' in request.resource.data)
+            || (request.resource.data.landingCta is string
+                && request.resource.data.landingCta.size() <= 40));
 
       allow delete: if isOwner(resource.data.ownerId);
 

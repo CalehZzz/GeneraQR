@@ -11,9 +11,12 @@
   const titleEl = document.getElementById('landing-title');
   const messageEl = document.getElementById('landing-message');
   const hostEl = document.getElementById('landing-host');
+  const hostWrap = document.getElementById('landing-dest');
   const ctaBtn = document.getElementById('landing-cta');
   const countdownEl = document.getElementById('landing-countdown');
   const skipLink = document.getElementById('landing-skip');
+  const brandEl = document.querySelector('.brand');
+  const cardEl = document.querySelector('.card');
 
   let targetUrl = '';
   let timer = null;
@@ -45,7 +48,6 @@
     if (remaining <= 0) {
       countdownEl.textContent = '';
       if (skipLink) skipLink.hidden = true;
-      // microtask: deja pintar el botón un instante y salta
       setTimeout(goNow, 0);
       return;
     }
@@ -66,19 +68,49 @@
     timer = setInterval(tick, 1000);
   }
 
+  function applyTheme(result) {
+    const bg = result.landingBg || '#0B1220';
+    const accent = result.landingAccent || '#7CF2D6';
+    const text = result.landingText || '#F4F7FB';
+    document.body.style.background =
+      'radial-gradient(900px 500px at 10% -10%, ' + accent + '55, transparent 55%),' +
+      'radial-gradient(700px 420px at 100% 110%, ' + accent + '33, transparent 50%),' +
+      'linear-gradient(160deg, ' + bg + ', ' + bg + ')';
+    document.body.style.color = text;
+    if (cardEl) {
+      cardEl.style.background = 'rgba(255,255,255,0.08)';
+      cardEl.style.borderColor = 'rgba(255,255,255,0.14)';
+    }
+    if (brandEl) {
+      brandEl.style.color = accent;
+      brandEl.style.display = result.landingShowBrand === false ? 'none' : '';
+    }
+    if (ctaBtn) {
+      ctaBtn.style.background = 'linear-gradient(135deg, ' + accent + ', #5AD0FF)';
+      ctaBtn.style.color = '#041018';
+      ctaBtn.textContent = result.landingCta || 'Abrir enlace';
+    }
+    if (messageEl) messageEl.style.color = text;
+    if (countdownEl) countdownEl.style.color = text;
+    if (skipLink) skipLink.style.color = text;
+  }
+
   function showLanding(result) {
     targetUrl = result.targetUrl;
     document.body.classList.remove('is-error');
     document.body.classList.add('is-ready');
-    document.title = (result.title || 'Abrir enlace') + ' · GeneraQR';
+    applyTheme(result);
 
-    if (titleEl) titleEl.textContent = result.title || 'Continuar al enlace';
+    const heading = (result.landingTitle || result.title || 'Continuar al enlace').trim();
+    document.title = heading + ' · GeneraQR';
+    if (titleEl) titleEl.textContent = heading;
     if (messageEl) {
       const msg = (result.landingMessage || '').trim();
       messageEl.textContent = msg || 'Estás a punto de abrir el destino de este código QR.';
       messageEl.style.display = 'block';
     }
     if (hostEl) hostEl.textContent = result.destinationHost || result.targetUrl;
+    if (hostWrap) hostWrap.style.display = result.landingShowHost === false ? 'none' : '';
     if (ctaBtn) {
       ctaBtn.disabled = false;
       ctaBtn.onclick = goNow;
@@ -94,13 +126,13 @@
   }
 
   async function run() {
-    const api = window.GeneraQRFirebase;
-    if (!api) {
+    const firebaseApi = window.GeneraQRFirebase;
+    if (!firebaseApi) {
       setStatus('Error de carga', 'No se pudo cargar el módulo de Firebase.', true);
       return;
     }
 
-    if (!api.isConfigured()) {
+    if (!firebaseApi.isConfigured()) {
       setStatus(
         'Firebase sin configurar',
         'Edita firebase-config.js con las claves de tu proyecto. Ver FIREBASE_SETUP.md.',
@@ -109,7 +141,7 @@
       return;
     }
 
-    const code = api.extractCodeFromLocation();
+    const code = firebaseApi.extractCodeFromLocation();
     if (!code) {
       setStatus('Código no encontrado', 'La URL no incluye un código QR válido.', true);
       if (homeLink) homeLink.hidden = false;
@@ -119,11 +151,10 @@
     setStatus('Abriendo…', '');
 
     try {
-      api.init();
-      const result = await api.registerScanAndGetTarget(code);
+      firebaseApi.init();
+      const result = await firebaseApi.registerScanAndGetTarget(code);
       targetUrl = result.targetUrl;
 
-      // Por defecto: redirect inmediato (sin página intermedia)
       if (!result.landingEnabled) {
         goNow();
         return;
@@ -138,7 +169,6 @@
     }
   }
 
-  // Arrancar lo antes posible (no esperar DOMContentLoaded si ya está listo)
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', run);
   } else {
