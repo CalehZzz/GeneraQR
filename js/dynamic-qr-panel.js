@@ -331,9 +331,9 @@
     setVal('dyn-landing-cta', detailQr.landingCta || 'Abrir enlace');
     const c = parseInt(detailQr.landingCountdown, 10);
     setVal('dyn-landing-countdown', String(isNaN(c) ? 2 : c));
-    const bg = detailQr.landingBg || '#0B1220';
-    const accent = detailQr.landingAccent || '#7CF2D6';
-    const text = detailQr.landingText || '#F4F7FB';
+    const bg = detailQr.landingBg || '#F5F5F7';
+    const accent = detailQr.landingAccent || '#0A84FF';
+    const text = detailQr.landingText || '#1D1D1F';
     setVal('dyn-landing-bg', bg);
     setVal('dyn-landing-bg-hex', bg.toUpperCase());
     setVal('dyn-landing-accent', accent);
@@ -360,18 +360,38 @@
       cta: cta,
       host: host,
       countdown: countdown,
-      bg: ($('dyn-landing-bg') && $('dyn-landing-bg').value) || '#0B1220',
-      accent: ($('dyn-landing-accent') && $('dyn-landing-accent').value) || '#7CF2D6',
-      text: ($('dyn-landing-text') && $('dyn-landing-text').value) || '#F4F7FB',
+      bg: ($('dyn-landing-bg') && $('dyn-landing-bg').value) || '#F5F5F7',
+      accent: ($('dyn-landing-accent') && $('dyn-landing-accent').value) || '#0A84FF',
+      text: ($('dyn-landing-text') && $('dyn-landing-text').value) || '#1D1D1F',
       showBrand: !($('dyn-landing-show-brand') && !$('dyn-landing-show-brand').checked),
       showHost: !($('dyn-landing-show-host') && !$('dyn-landing-show-host').checked)
     };
   }
 
+  function hexToRgb(hex) {
+    const m = /^#?([0-9a-f]{6})$/i.exec(String(hex || '').trim());
+    if (!m) return null;
+    const n = parseInt(m[1], 16);
+    return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+  }
+
+  function rgba(hex, alpha) {
+    const c = hexToRgb(hex);
+    if (!c) return 'rgba(10,132,255,' + alpha + ')';
+    return 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',' + alpha + ')';
+  }
+
+  function readableOn(hex) {
+    const c = hexToRgb(hex);
+    if (!c) return '#FFFFFF';
+    const lum = (0.299 * c.r + 0.587 * c.g + 0.114 * c.b) / 255;
+    return lum > 0.62 ? '#1D1D1F' : '#FFFFFF';
+  }
+
   function updateLandingPreview() {
     const s = landingFormState();
     document.querySelectorAll('[data-landing-preview]').forEach((box) => {
-      box.style.background = 'radial-gradient(120px 80px at 20% 0%, ' + s.accent + '55, transparent 60%), ' + s.bg;
+      box.style.background = s.bg;
       box.style.color = s.text;
       const brand = box.querySelector('[data-lp="brand"]');
       const title = box.querySelector('[data-lp="title"]');
@@ -389,12 +409,13 @@
       if (host) {
         host.textContent = s.host;
         host.style.display = s.showHost ? '' : 'none';
-        host.style.color = s.text;
+        host.style.color = s.accent;
+        host.style.background = rgba(s.accent, 0.12);
       }
       if (cta) {
         cta.textContent = s.cta;
         cta.style.background = s.accent;
-        cta.style.color = '#041018';
+        cta.style.color = readableOn(s.accent);
       }
       if (count) {
         count.textContent = s.countdown > 0

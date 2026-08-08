@@ -87,10 +87,19 @@
   </div>
   </div>
 
-  <div class="mode-toggle" id="mode-toggle">
-    <button type="button" class="mode-btn active" data-mode="designer">Diseñador QR</button>
-    <button type="button" class="mode-btn" data-mode="templates">Plantillas creativas</button>
-    <button type="button" class="mode-btn" data-mode="dynamic">QR dinámico</button>
+  <div class="mode-toggle" id="mode-toggle" role="tablist" aria-label="Modo de generador">
+    <button type="button" class="mode-btn active" data-mode="designer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m14.8 3.7 5.5 5.5"/><path d="M17 2.5 21.5 7 8.4 20.1l-5.6 1.5 1.5-5.6z"/></svg>
+      <span>Diseñador QR</span>
+    </button>
+    <button type="button" class="mode-btn" data-mode="templates">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7.5" height="9" rx="2"/><rect x="13.5" y="3" width="7.5" height="5.5" rx="2"/><rect x="3" y="15" width="7.5" height="6" rx="2"/><rect x="13.5" y="11.5" width="7.5" height="9.5" rx="2"/></svg>
+      <span>Plantillas</span>
+    </button>
+    <button type="button" class="mode-btn" data-mode="dynamic">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 0 1 14.4-6.1L21 8"/><path d="M21 3.5V8h-4.5"/><path d="M20.5 12a8.5 8.5 0 0 1-14.4 6.1L3 16"/><path d="M3 20.5V16h4.5"/></svg>
+      <span>QR dinámico</span>
+    </button>
   </div>
 
   <div class="mode-panel active" data-mode-panel="designer">
@@ -786,22 +795,22 @@
                   <div class="field">
                     <label class="field-label" for="dyn-landing-bg">Color de fondo</label>
                     <div class="swatch-input">
-                      <input type="color" id="dyn-landing-bg" value="#0B1220">
-                      <input type="text" class="hex-val" id="dyn-landing-bg-hex" value="#0B1220" maxlength="7" spellcheck="false" autocomplete="off">
+                      <input type="color" id="dyn-landing-bg" value="#F5F5F7">
+                      <input type="text" class="hex-val" id="dyn-landing-bg-hex" value="#F5F5F7" maxlength="7" spellcheck="false" autocomplete="off">
                     </div>
                   </div>
                   <div class="field">
                     <label class="field-label" for="dyn-landing-accent">Color de acento</label>
                     <div class="swatch-input">
-                      <input type="color" id="dyn-landing-accent" value="#7CF2D6">
-                      <input type="text" class="hex-val" id="dyn-landing-accent-hex" value="#7CF2D6" maxlength="7" spellcheck="false" autocomplete="off">
+                      <input type="color" id="dyn-landing-accent" value="#0A84FF">
+                      <input type="text" class="hex-val" id="dyn-landing-accent-hex" value="#0A84FF" maxlength="7" spellcheck="false" autocomplete="off">
                     </div>
                   </div>
                   <div class="field">
                     <label class="field-label" for="dyn-landing-text">Color de texto</label>
                     <div class="swatch-input">
-                      <input type="color" id="dyn-landing-text" value="#F4F7FB">
-                      <input type="text" class="hex-val" id="dyn-landing-text-hex" value="#F4F7FB" maxlength="7" spellcheck="false" autocomplete="off">
+                      <input type="color" id="dyn-landing-text" value="#1D1D1F">
+                      <input type="text" class="hex-val" id="dyn-landing-text-hex" value="#1D1D1F" maxlength="7" spellcheck="false" autocomplete="off">
                     </div>
                   </div>
                   <div class="field">

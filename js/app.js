@@ -75,33 +75,81 @@
   wireCollapsibleToggle('tpl-preview-toggle', document.getElementById('tpl-canvas-wrap'));
   const metaSize = document.getElementById('meta-size');
 
-  /* En móvil (Diseñador): el preview sticky se encoge al scrollear */
+  /* En móvil (Diseñador): el preview sticky se encoge al scrollear.
+     El encogido arranca solo cuando la tarjeta ya está pegada arriba y
+     empezaría a tapar el contenido; los botones se comprimen, no se ocultan. */
   (function wireDesignerPreviewShrink(){
     const previewCard = document.getElementById('preview-card');
-    if(!previewCard) return;
+    const previewPanel = document.querySelector('.preview-panel');
+    if(!previewCard || !previewPanel) return;
+
     const mq = window.matchMedia('(max-width:900px)');
-    const update = () => {
+    const FULL = 220, MIN = 124;   // tamaño del QR
+    const RANGE = 260;             // px de scroll para llegar al mínimo
+    let stickyStart = null;
+    let ticking = false;
+
+    function reset(){
+      previewCard.style.setProperty('--designer-qr-size', FULL + 'px');
+      previewCard.style.setProperty('--preview-pad', '16px');
+      previewCard.style.setProperty('--preview-gap', '16px');
+      previewCard.style.setProperty('--preview-btn-pad', '14px 18px');
+      previewCard.style.setProperty('--preview-btn-size', '14px');
+      previewCard.style.setProperty('--preview-meta-size', '11px');
+      previewCard.style.setProperty('--preview-meta-opacity', '1');
+    }
+
+    function lerp(a, b, t){ return a + (b - a) * t; }
+
+    function apply(){
+      ticking = false;
       const designerActive = !!document.querySelector('.mode-panel[data-mode-panel="designer"].active');
       if(!mq.matches || !designerActive || previewCard.classList.contains('collapsed')){
-        previewCard.style.setProperty('--designer-qr-size', '200px');
-        previewCard.classList.remove('is-compact');
+        stickyStart = null;
+        reset();
         return;
       }
+
       const y = window.scrollY || document.documentElement.scrollTop || 0;
-      const t = Math.min(1, Math.max(0, y / 200));
-      // 200px → 96px
-      const size = Math.round(200 - t * 104);
-      previewCard.style.setProperty('--designer-qr-size', size + 'px');
-      previewCard.classList.toggle('is-compact', size < 140);
-    };
-    window.addEventListener('scroll', update, { passive:true });
-    window.addEventListener('resize', update);
+      // Punto en el que el panel se vuelve sticky (deja de moverse con la página)
+      if(stickyStart === null){
+        const stickyTop = parseFloat(getComputedStyle(previewPanel).top) || 8;
+        stickyStart = Math.max(0, previewPanel.getBoundingClientRect().top + y - stickyTop);
+      }
+
+      if(y <= stickyStart){
+        reset();
+        return;
+      }
+
+      const t = Math.min(1, (y - stickyStart) / RANGE);
+      previewCard.style.setProperty('--designer-qr-size', Math.round(lerp(FULL, MIN, t)) + 'px');
+      previewCard.style.setProperty('--preview-pad', Math.round(lerp(16, 10, t)) + 'px');
+      previewCard.style.setProperty('--preview-gap', Math.round(lerp(16, 8, t)) + 'px');
+      previewCard.style.setProperty(
+        '--preview-btn-pad',
+        Math.round(lerp(14, 9, t)) + 'px ' + Math.round(lerp(18, 12, t)) + 'px'
+      );
+      previewCard.style.setProperty('--preview-btn-size', lerp(14, 12, t).toFixed(1) + 'px');
+      previewCard.style.setProperty('--preview-meta-size', lerp(11, 9.5, t).toFixed(1) + 'px');
+      previewCard.style.setProperty('--preview-meta-opacity', lerp(1, 0.6, t).toFixed(2));
+    }
+
+    function onScroll(){
+      if(ticking) return;
+      ticking = true;
+      requestAnimationFrame(apply);
+    }
+
+    window.addEventListener('scroll', onScroll, { passive:true });
+    window.addEventListener('resize', () => { stickyStart = null; onScroll(); });
     document.querySelectorAll('#mode-toggle .mode-btn').forEach(btn => {
-      btn.addEventListener('click', () => setTimeout(update, 0));
+      btn.addEventListener('click', () => { stickyStart = null; setTimeout(apply, 0); });
     });
     const toggle = document.getElementById('preview-toggle');
-    if(toggle) toggle.addEventListener('click', () => setTimeout(update, 0));
-    update();
+    if(toggle) toggle.addEventListener('click', () => { stickyStart = null; setTimeout(apply, 0); });
+    reset();
+    onScroll();
   })();
 
   const presetNameInput = document.getElementById('preset-name-input');

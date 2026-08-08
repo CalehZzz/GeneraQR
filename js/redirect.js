@@ -68,31 +68,52 @@
     timer = setInterval(tick, 1000);
   }
 
+  function hexToRgb(hex) {
+    const m = /^#?([0-9a-f]{6})$/i.exec(String(hex || '').trim());
+    if (!m) return null;
+    const n = parseInt(m[1], 16);
+    return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+  }
+
+  /** Luminancia relativa para decidir texto claro u oscuro sobre el acento. */
+  function readableOn(hex) {
+    const c = hexToRgb(hex);
+    if (!c) return '#FFFFFF';
+    const lum = (0.299 * c.r + 0.587 * c.g + 0.114 * c.b) / 255;
+    return lum > 0.62 ? '#1D1D1F' : '#FFFFFF';
+  }
+
+  function rgba(hex, alpha) {
+    const c = hexToRgb(hex);
+    if (!c) return 'rgba(10,132,255,' + alpha + ')';
+    return 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',' + alpha + ')';
+  }
+
   function applyTheme(result) {
-    const bg = result.landingBg || '#0B1220';
-    const accent = result.landingAccent || '#7CF2D6';
-    const text = result.landingText || '#F4F7FB';
-    document.body.style.background =
-      'radial-gradient(900px 500px at 10% -10%, ' + accent + '55, transparent 55%),' +
-      'radial-gradient(700px 420px at 100% 110%, ' + accent + '33, transparent 50%),' +
-      'linear-gradient(160deg, ' + bg + ', ' + bg + ')';
+    const bg = result.landingBg || '#F5F5F7';
+    const accent = result.landingAccent || '#0A84FF';
+    const text = result.landingText || '#1D1D1F';
+
+    document.body.style.background = bg;
     document.body.style.color = text;
-    if (cardEl) {
-      cardEl.style.background = 'rgba(255,255,255,0.08)';
-      cardEl.style.borderColor = 'rgba(255,255,255,0.14)';
-    }
+    document.documentElement.style.setProperty('--accent', accent);
+    document.documentElement.style.setProperty('--accent-soft', rgba(accent, 0.1));
+
     if (brandEl) {
       brandEl.style.color = accent;
       brandEl.style.display = result.landingShowBrand === false ? 'none' : '';
     }
     if (ctaBtn) {
-      ctaBtn.style.background = 'linear-gradient(135deg, ' + accent + ', #5AD0FF)';
-      ctaBtn.style.color = '#041018';
+      ctaBtn.style.background = accent;
+      ctaBtn.style.color = readableOn(accent);
       ctaBtn.textContent = result.landingCta || 'Abrir enlace';
     }
-    if (messageEl) messageEl.style.color = text;
-    if (countdownEl) countdownEl.style.color = text;
-    if (skipLink) skipLink.style.color = text;
+    if (hostWrap) {
+      hostWrap.style.background = rgba(accent, 0.1);
+      hostWrap.style.borderColor = rgba(accent, 0.2);
+    }
+    if (hostEl) hostEl.style.color = accent;
+    if (titleEl) titleEl.style.color = text;
   }
 
   function showLanding(result) {

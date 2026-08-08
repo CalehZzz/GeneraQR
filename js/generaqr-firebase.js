@@ -230,9 +230,9 @@
       landingMessage: '',
       landingCta: 'Abrir enlace',
       landingCountdown: 2,
-      landingBg: '#0B1220',
-      landingAccent: '#7CF2D6',
-      landingText: '#F4F7FB',
+      landingBg: '#F5F5F7',
+      landingAccent: '#0A84FF',
+      landingText: '#1D1D1F',
       landingShowBrand: true,
       landingShowHost: true
     });
@@ -415,9 +415,9 @@
       landingMessage: String(settings.landingMessage || '').trim().slice(0, 160),
       landingCta: String(settings.landingCta || 'Abrir enlace').trim().slice(0, 40) || 'Abrir enlace',
       landingCountdown: countdown,
-      landingBg: normalizeHex(settings.landingBg, '#0B1220'),
-      landingAccent: normalizeHex(settings.landingAccent, '#7CF2D6'),
-      landingText: normalizeHex(settings.landingText, '#F4F7FB'),
+      landingBg: normalizeHex(settings.landingBg, '#F5F5F7'),
+      landingAccent: normalizeHex(settings.landingAccent, '#0A84FF'),
+      landingText: normalizeHex(settings.landingText, '#1D1D1F'),
       landingShowBrand: settings.landingShowBrand !== false,
       landingShowHost: settings.landingShowHost !== false,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -516,9 +516,9 @@
       landingMessage: qr.landingMessage || '',
       landingCta: qr.landingCta || 'Abrir enlace',
       landingCountdown: Math.max(0, Math.min(30, countdown)),
-      landingBg: qr.landingBg || '#0B1220',
-      landingAccent: qr.landingAccent || '#7CF2D6',
-      landingText: qr.landingText || '#F4F7FB',
+      landingBg: qr.landingBg || '#F5F5F7',
+      landingAccent: qr.landingAccent || '#0A84FF',
+      landingText: qr.landingText || '#1D1D1F',
       landingShowBrand: qr.landingShowBrand !== false,
       landingShowHost: qr.landingShowHost !== false,
       destinationHost: destinationHost(qr.targetUrl)
