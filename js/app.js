@@ -191,27 +191,6 @@
   let targetSize = 1024;
   let logoBgShape = 'rounded';
 
-  // Espera a que QRCodeStyling termine de pintar su <canvas>. La librería lo
-  // dibuja de forma asíncrona (no está listo apenas se llama a .append()), así
-  // que se necesita un margen mínimo antes de leerlo — si se lee demasiado
-  // pronto se copia un canvas en blanco y el QR "desaparece". Se mantiene el
-  // mismo tiempo de espera que ya funcionaba, con un pequeño sondeo extra por
-  // si en algún dispositivo tarda más.
-  function waitForCanvas(container, cb){
-    setTimeout(() => {
-      const c = container.querySelector('canvas');
-      if(c){ cb(c); return; }
-      // fallback: sigue esperando un poco más si aún no está listo
-      let attempts = 0;
-      const poll = () => {
-        const c2 = container.querySelector('canvas');
-        if(c2 || attempts > 20){ cb(c2); return; }
-        attempts++;
-        setTimeout(poll, 50);
-      };
-      poll();
-    }, 120);
-  }
   let contentType = 'link';
 
   const dotsTypes = [
@@ -939,10 +918,27 @@
     debounceTimer = setTimeout(() => generate(true), 150);
   }
 
-  function generate(animate){
+  /** Estilo actual del Diseñador, en el formato que entiende GeneraQRRender. */
+  function currentRenderOptions(){
+    return {
+      dotsType: selectedDotsType,
+      csquareType: selectedCSquareType,
+      cdotType: selectedCDotType,
+      colorState: colorState,
+      bgColor: bgColorInput.value,
+      logoImage: logoImage,
+      logoBgShape: logoBgShape,
+      logoSizePct: logoSize.value,
+      logoPaddingPct: logoPadding.value
+    };
+  }
+
+  let generateToken = 0;
+
+  async function generate(animate){
     const text = (composeQrData() || '').trim();
-    qrHolder.innerHTML = '';
     if(!text){
+      qrHolder.innerHTML = '';
       emptyState.style.display = 'block';
       downloadBtn.disabled = true;
       finalCanvas = null;
@@ -950,71 +946,17 @@
     }
     emptyState.style.display = 'none';
 
-    const hiddenDiv = document.createElement('div');
-    hiddenDiv.style.position = 'fixed';
-    hiddenDiv.style.left = '-9999px';
-    document.body.appendChild(hiddenDiv);
-
-    const qrObj = new QRCodeStyling({
-      width: targetSize,
-      height: targetSize,
-      type: 'canvas',
-      data: text,
-      margin: Math.round(targetSize * 0.05),
-      qrOptions: { errorCorrectionLevel: 'H' },
-      dotsOptions: Object.assign({ type: selectedDotsType }, getColorOption('dots')),
-      cornersSquareOptions: Object.assign({ type: selectedCSquareType }, getColorOption('csquare')),
-      cornersDotOptions: Object.assign({ type: selectedCDotType }, getColorOption('cdot')),
-      backgroundOptions: { color: bgColorInput.value }
-    });
-    qrObj.append(hiddenDiv);
-
-    waitForCanvas(hiddenDiv, (sourceCanvas) => {
-      if(!sourceCanvas){ document.body.removeChild(hiddenDiv); return; }
-
-      const outCanvas = document.createElement('canvas');
-      outCanvas.width = targetSize;
-      outCanvas.height = targetSize;
-      const ctx = outCanvas.getContext('2d');
-      ctx.drawImage(sourceCanvas, 0, 0, targetSize, targetSize);
-
-      if(logoImage){
-        const pct = parseInt(logoSize.value, 10) / 100;
-        const logoMax = targetSize * pct;
-        let logoW, logoH;
-        if(logoImage.width >= logoImage.height){
-          logoW = logoMax; logoH = logoMax * (logoImage.height / logoImage.width);
-        } else {
-          logoH = logoMax; logoW = logoMax * (logoImage.width / logoImage.height);
-        }
-        const padPct = parseInt(logoPadding.value, 10) / 100;
-        const badgeSize = computeBadgeSize(targetSize, logoMax, padPct);
-        const bx = (targetSize - badgeSize) / 2;
-        const by = (targetSize - badgeSize) / 2;
-
-        if(logoBgShape !== 'none'){
-          ctx.fillStyle = bgColorInput.value;
-          if(logoBgShape === 'circle'){
-            ctx.beginPath();
-            ctx.arc(targetSize/2, targetSize/2, badgeSize/2, 0, Math.PI*2);
-            ctx.fill();
-          } else if(logoBgShape === 'square'){
-            ctx.fillRect(bx, by, badgeSize, badgeSize);
-          } else {
-            roundRect(ctx, bx, by, badgeSize, badgeSize, badgeSize*0.22);
-            ctx.fill();
-          }
-        }
-        ctx.drawImage(logoImage, (targetSize-logoW)/2, (targetSize-logoH)/2, logoW, logoH);
-      }
+    const token = ++generateToken;
+    try{
+      const outCanvas = await window.GeneraQRRender.renderQrCanvas(
+        Object.assign(currentRenderOptions(), { data: text, size: targetSize })
+      );
+      // Una regeneración más reciente ya está en marcha
+      if(token !== generateToken) return;
 
       finalCanvas = outCanvas;
       qrHolder.innerHTML = '';
-      const displayCanvas = document.createElement('canvas');
-      displayCanvas.width = targetSize;
-      displayCanvas.height = targetSize;
-      displayCanvas.getContext('2d').drawImage(outCanvas, 0, 0);
-      qrHolder.appendChild(displayCanvas);
+      qrHolder.appendChild(outCanvas);
 
       downloadBtn.disabled = false;
       metaSize.textContent = targetSize + ' × ' + targetSize + ' px';
@@ -1024,9 +966,10 @@
         void qrHolder.offsetWidth;
         qrHolder.classList.add('pop');
       }
-
-      document.body.removeChild(hiddenDiv);
-    });
+    } catch(err){
+      console.error(err);
+      if(token === generateToken) emptyState.style.display = 'block';
+    }
   }
 
   /* ---------- nombre de archivo + guardado (iOS/Android incluidos) ----------
@@ -1927,36 +1870,33 @@
     return lines.length;
   }
 
-  function buildTemplateQrOptions(){
+  /** Estilo del QR dentro de una plantilla: el del Diseñador o el acento de la plantilla. */
+  function templateQrStyle(){
     if(tplState.useMainStyle){
       return {
-        dotsOptions: Object.assign({ type: selectedDotsType }, getColorOption('dots')),
-        cornersSquareOptions: Object.assign({ type: selectedCSquareType }, getColorOption('csquare')),
-        cornersDotOptions: Object.assign({ type: selectedCDotType }, getColorOption('cdot'))
+        dotsType: selectedDotsType,
+        csquareType: selectedCSquareType,
+        cdotType: selectedCDotType,
+        colorState: colorState
       };
     }
+    const accent = { mode: 'solid', color1: tplState.accent };
     return {
-      dotsOptions: { type: 'rounded', color: tplState.accent },
-      cornersSquareOptions: { type: 'extra-rounded', color: tplState.accent },
-      cornersDotOptions: { type: 'dot', color: tplState.accent }
+      dotsType: 'rounded',
+      csquareType: 'extra-rounded',
+      cdotType: 'dot',
+      colorState: { dots: accent, csquare: accent, cdot: accent }
     };
   }
 
   function renderTemplateQR(cb){
-    const hiddenDiv = document.createElement('div');
-    hiddenDiv.style.position = 'fixed'; hiddenDiv.style.left = '-9999px';
-    document.body.appendChild(hiddenDiv);
-    const qrObj = new QRCodeStyling(Object.assign({
-      width: 480, height: 480, type: 'canvas',
+    window.GeneraQRRender.renderQrCanvas(Object.assign(templateQrStyle(), {
       data: tplState.qrText || 'generaqr.xyz',
-      margin: 10,
-      qrOptions: { errorCorrectionLevel: 'H' },
-      backgroundOptions: { color: '#ffffff' }
-    }, buildTemplateQrOptions()));
-    qrObj.append(hiddenDiv);
-    waitForCanvas(hiddenDiv, (c) => {
-      cb(c);
-      document.body.removeChild(hiddenDiv);
+      size: 480,
+      bgColor: '#ffffff'
+    })).then(cb).catch(err => {
+      console.error(err);
+      cb(null);
     });
   }
 

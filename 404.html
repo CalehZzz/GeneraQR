@@ -22,6 +22,8 @@
     --shadow-lg:0 8px 24px rgba(0,0,0,0.08), 0 24px 64px rgba(0,0,0,0.10);
   }
   *{box-sizing:border-box;}
+  /* .cta y .home fijan display, que por sí solo ganaría al atributo hidden */
+  [hidden]{display:none !important;}
   html,body{margin:0;padding:0;min-height:100%;}
   body{
     font-family:-apple-system,BlinkMacSystemFont,'Inter',"Segoe UI",Roboto,sans-serif;
@@ -93,6 +95,7 @@
   .cta:active{transform:scale(0.98);}
   .cta:disabled{opacity:0.6;cursor:wait;}
   .countdown{margin:14px 0 0; font-size:13px; color:var(--text-faint); min-height:1.2em; font-weight:600;}
+  .cta.retry{margin-top:6px;}
   .skip{display:inline-block; margin-top:12px; color:var(--text-dim); font-size:13px; font-weight:600; text-decoration:none;}
   .skip:hover{color:var(--accent);}
   .home{display:inline-block; margin-top:18px; color:var(--accent); font-weight:600; font-size:13px; text-decoration:none;}
@@ -103,7 +106,7 @@
   body.is-ready #landing-loading{display:none;}
 </style>
 <script>
-  // Si no es un QR corto /r/CODIGO, ir al inicio sin cargar Firebase.
+  // Si no es un QR corto /r/CODIGO, ir al inicio sin cargar nada más.
   (function () {
     var path = location.pathname || '';
     if (!/\/r\/[A-Za-z0-9_-]+\/?$/.test(path)) {
@@ -128,14 +131,11 @@
       <p class="countdown" id="landing-countdown"></p>
       <a class="skip" id="landing-skip" href="#" hidden>Abrir ahora</a>
     </div>
+    <button type="button" class="cta retry" id="redirect-retry" hidden>Reintentar</button>
     <a class="home" id="redirect-home" href="/" hidden>Volver a GeneraQR</a>
   </div>
 
-  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
   <script src="/firebase-config.js"></script>
-  <script src="/js/generaqr-firebase.js"></script>
   <script src="/js/redirect.js"></script>
 </body>
 </html>

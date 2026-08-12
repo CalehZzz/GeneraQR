@@ -124,8 +124,8 @@ Si Google te pide configurar la pantalla OAuth:
 4. Ese enlace es el que codificas/imprimas en el QR.
 5. Al escanearlo:
    - GitHub Pages sirve `404.html` para `/r/...`
-   - Se reenvía a `d.html?c=...`
-   - Se registra el escaneo en Firestore
+   - Se lee el destino con la API REST de Firestore (una sola petición, sin cargar el SDK)
+   - Se registra el escaneo con `sendBeacon`, que se entrega aunque la página navegue
    - Se redirige a la URL actual
 6. Si **cambias el destino**, el código corto **no cambia**, pero se cierra la versión anterior y se abre una nueva con contadores en cero. El historial de versiones conserva las estadísticas viejas.
 7. Por defecto la redirección es **inmediata** (sin página intermedia). Si activas la página intermedia en el panel del QR, el visitante ve mensaje + cuenta atrás antes de abrir el destino.

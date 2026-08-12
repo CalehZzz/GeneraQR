@@ -10,6 +10,7 @@ Generador de códigos QR gratis en el navegador, con plantillas creativas y **QR
 | `css/styles.css` | Estilos |
 | `js/app.js` | Diseñador + plantillas creativas |
 | `js/generaqr-firebase.js` | Auth, Firestore, QR dinámicos, galería de logos |
+| `js/qr-render.js` | Render del QR compartido por Diseñador, plantillas y panel dinámico |
 | `js/dynamic-qr-panel.js` | UI del panel dinámico |
 | `js/save-file.js` | Guardado de archivos (iOS/Android incluidos) |
 | `js/image-store.js` | Compresión WebP de logos antes de subirlos |
@@ -42,3 +43,5 @@ usan `Blob` y, en móvil, la hoja de compartir del sistema para permitir
 ## Enlaces cortos
 
 Los QR dinámicos usan `https://generaqr.xyz/r/CODIGO`. En GitHub Pages, `404.html` registra el escaneo y redirige.
+
+La página de escaneo habla directamente con la **API REST de Firestore** en lugar de cargar el SDK: son ~400 KB menos y un solo viaje para leer el destino. El +1 del contador se envía con `navigator.sendBeacon`, que el navegador entrega aunque la página ya haya navegado — antes la escritura se abortaba al redirigir y algunos escaneos se perdían.

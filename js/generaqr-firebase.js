@@ -466,83 +466,6 @@
     }
   }
 
-  /**
-   * Registra un escaneo y devuelve la URL de destino + opciones de landing.
-   * Usado por la página de redirección (/r/CODE).
-   */
-  async function registerScanAndGetTarget(code) {
-    const { db } = init();
-    const qrRef = db.collection('dynamicQrs').doc(code);
-    const qrSnap = await qrRef.get();
-    if (!qrSnap.exists) {
-      const err = new Error('Este código QR no existe.');
-      err.code = 'not-found';
-      throw err;
-    }
-    const qr = qrSnap.data();
-    if (qr.active === false) {
-      const err = new Error('Este código QR está desactivado.');
-      err.code = 'inactive';
-      throw err;
-    }
-    if (!qr.targetUrl || !qr.currentVersionId) {
-      const err = new Error('Este QR no tiene destino configurado.');
-      err.code = 'no-target';
-      throw err;
-    }
-
-    const versionRef = qrRef.collection('versions').doc(qr.currentVersionId);
-    const day = todayKey();
-    // No esperamos el incremento: la redirección no debe bloquearse por el contador.
-    versionRef.update({
-      scansTotal: firebase.firestore.FieldValue.increment(1),
-      ['dailyCounts.' + day]: firebase.firestore.FieldValue.increment(1),
-      lastScanAt: firebase.firestore.FieldValue.serverTimestamp()
-    }).catch(function (e) {
-      console.warn('No se pudo registrar el escaneo:', e);
-    });
-
-    // Solo si está explícitamente activada (por defecto: redirect inmediato)
-    const landingEnabled = qr.landingEnabled === true;
-    let countdown = parseInt(qr.landingCountdown, 10);
-    if (isNaN(countdown)) countdown = 2;
-
-    return {
-      targetUrl: qr.targetUrl,
-      title: qr.title || '',
-      versionId: qr.currentVersionId,
-      landingEnabled: landingEnabled,
-      landingTitle: qr.landingTitle || '',
-      landingMessage: qr.landingMessage || '',
-      landingCta: qr.landingCta || 'Abrir enlace',
-      landingCountdown: Math.max(0, Math.min(30, countdown)),
-      landingBg: qr.landingBg || '#F5F5F7',
-      landingAccent: qr.landingAccent || '#0A84FF',
-      landingText: qr.landingText || '#1D1D1F',
-      landingShowBrand: qr.landingShowBrand !== false,
-      landingShowHost: qr.landingShowHost !== false,
-      destinationHost: destinationHost(qr.targetUrl)
-    };
-  }
-
-  function extractCodeFromLocation(loc) {
-    const location = loc || global.location;
-    const params = new URLSearchParams(location.search);
-    if (params.get('c')) return params.get('c').trim();
-    if (params.get('r')) return params.get('r').trim();
-
-    const path = location.pathname || '';
-    const m = path.match(/\/r\/([A-Za-z0-9_-]+)\/?$/);
-    if (m) return m[1];
-
-    // GitHub Pages 404: a veces la ruta queda en ?pathname= o se pasa via hash
-    if (location.hash) {
-      const hm = location.hash.match(/[#/]*r\/([A-Za-z0-9_-]+)/);
-      if (hm) return hm[1];
-    }
-    return '';
-  }
-
   function getCurrentUser() {
     try {
       const { auth } = init();
@@ -791,8 +714,6 @@
     changeDestination,
     updateTitle,
     deactivateQr,
-    registerScanAndGetTarget,
-    extractCodeFromLocation,
     updateLandingSettings,
     updateQrStyle,
     buildDailySeries,
