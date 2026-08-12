@@ -922,6 +922,58 @@
   .preset-actions .pill-btn{padding:6px 12px;font-size:11px;}
   .preset-empty{font-size:13px;color:var(--text-faint);text-align:center;margin:16px 0 0;display:none;}
 
+  /* ---------- galería de logos ---------- */
+  .logo-gallery{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(84px, 1fr));
+    gap:10px;
+    margin-top:14px;
+  }
+  .logo-gallery:empty{margin-top:0;}
+  .logo-chip{
+    position:relative;
+    border:1px solid var(--border);
+    background:
+      linear-gradient(45deg, #f1f2f4 25%, transparent 25%),
+      linear-gradient(-45deg, #f1f2f4 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #f1f2f4 75%),
+      linear-gradient(-45deg, transparent 75%, #f1f2f4 75%),
+      var(--surface);
+    background-size:12px 12px;
+    background-position:0 0, 0 6px, 6px -6px, -6px 0px;
+    border-radius:14px;
+    padding:8px 8px 6px;
+    cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+    transition:border-color .15s ease, transform .12s ease;
+  }
+  .logo-chip:hover{border-color:var(--accent);transform:translateY(-2px);}
+  .logo-chip.active{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft);}
+  .logo-chip img{
+    width:100%;aspect-ratio:1;object-fit:contain;display:block;
+  }
+  .logo-chip-name{
+    font-size:10px;font-weight:600;color:var(--text-dim);
+    max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .logo-chip-del{
+    position:absolute;top:-6px;right:-6px;
+    width:22px;height:22px;border-radius:50%;
+    border:1px solid var(--border);background:var(--surface);
+    color:var(--accent-2);font-size:13px;font-weight:700;line-height:1;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;
+    box-shadow:var(--shadow-sm);padding:0;
+  }
+  .logo-chip-del:hover{background:var(--accent-2-soft);}
+
+  /* ---------- nombre de archivo ---------- */
+  .filename-row{display:flex;align-items:center;gap:8px;}
+  .filename-row input{flex:1;min-width:0;}
+  .filename-ext{
+    font-size:13px;font-weight:700;color:var(--text-faint);
+    flex-shrink:0;font-variant-numeric:tabular-nums;
+  }
+
   /* ---------- templates gallery ---------- */
   .tpl-gallery{display:none;}
   .tpl-gallery.active{display:block;}

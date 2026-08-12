@@ -620,16 +620,31 @@
   }
 
   async function downloadDynQr() {
-    if (!previewQr || !detailQr) return;
+    if (!detailQr) return;
+    const save = window.GeneraQRSave;
+    const base = (detailQr.title || 'generaqr-dinamico-' + detailQr.id);
+    const name = save ? save.safeFilename(base, 'png', 'codigo-qr') : base + '.png';
+    const canvas = $('dyn-qr-holder') && $('dyn-qr-holder').querySelector('canvas');
+
     try {
-      await previewQr.download({ name: 'generaqr-dinamico-' + detailQr.id, extension: 'png' });
-    } catch (e) {
-      const canvas = $('dyn-qr-holder') && $('dyn-qr-holder').querySelector('canvas');
-      if (!canvas) return;
-      const a = document.createElement('a');
-      a.download = 'generaqr-dinamico-' + detailQr.id + '.png';
-      a.href = canvas.toDataURL('image/png');
-      a.click();
+      if (save && canvas) {
+        // Vuelve a generar a mayor resolución para imprimir
+        const big = document.createElement('canvas');
+        big.width = 1024;
+        big.height = 1024;
+        const ctx = big.getContext('2d');
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(canvas, 0, 0, big.width, big.height);
+        const result = await save.saveCanvas(big, name, { title: name });
+        if (result === 'shared') showToast('Elige “Guardar imagen” o “Guardar en Archivos”');
+        return;
+      }
+      if (previewQr) {
+        await previewQr.download({ name: name.replace(/\.png$/i, ''), extension: 'png' });
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('No se pudo guardar el QR. Inténtalo de nuevo.', true);
     }
   }
 

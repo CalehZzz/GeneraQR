@@ -554,7 +554,8 @@
 
   const STYLE_KEYS = [
     'dotsType', 'csquareType', 'cdotType', 'colorState',
-    'bgColor', 'logoBgShape', 'logoSize', 'logoPadding', 'targetSize'
+    'bgColor', 'logoBgShape', 'logoSize', 'logoPadding', 'targetSize',
+    'logoId'
   ];
 
   function pickStyle(style) {
@@ -623,6 +624,104 @@
     if (snap.data().ownerId !== user.uid) throw new Error('No tienes permiso.');
     await ref.delete();
     cacheRemove(cacheKey(['presets', user.uid]));
+  }
+
+  /* ---------- galería de logos ----------
+     Las imágenes se guardan ya comprimidas (WebP con alfa, lado máximo 512)
+     como data URL. La miniatura va aparte para poder cachear la galería en
+     localStorage sin arrastrar la imagen completa. */
+
+  const LOGO_LIMIT = 30;
+  const LOGO_MAX_CHARS = 700 * 1024; // margen bajo el límite de 1 MiB por documento
+
+  /** Cachea la galería sin `dataUrl` para no llenar localStorage. */
+  function stripLogoData(list) {
+    return list.map(function (l) {
+      const copy = Object.assign({}, l);
+      delete copy.dataUrl;
+      return copy;
+    });
+  }
+
+  async function listLogoAssets(options) {
+    const opts = options || {};
+    const { auth, db } = init();
+    const user = auth.currentUser;
+    if (!user) return [];
+    const key = cacheKey(['logos', user.uid]);
+    if (!opts.force) {
+      const cached = cacheGet(key);
+      if (cached) return cached;
+    }
+    const snap = await db.collection('logoAssets')
+      .where('ownerId', '==', user.uid)
+      .orderBy('updatedAt', 'desc')
+      .get();
+    const list = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
+    cacheSet(key, stripLogoData(list));
+    return list;
+  }
+
+  async function getLogoAsset(id) {
+    const { auth, db } = init();
+    const user = auth.currentUser;
+    if (!user || !id) return null;
+    const snap = await db.collection('logoAssets').doc(id).get();
+    if (!snap.exists) return null;
+    const data = snap.data();
+    if (data.ownerId !== user.uid) return null;
+    return Object.assign({ id: snap.id }, data);
+  }
+
+  async function saveLogoAsset(asset) {
+    const { auth, db } = init();
+    const user = auth.currentUser;
+    if (!user) throw new Error('Debes iniciar sesión para guardar logos en tu cuenta.');
+
+    const dataUrl = String(asset && asset.dataUrl || '');
+    if (!/^data:image\/(webp|png|jpeg);base64,/.test(dataUrl)) {
+      throw new Error('Formato de imagen no válido.');
+    }
+    if (dataUrl.length > LOGO_MAX_CHARS) {
+      throw new Error('La imagen sigue siendo demasiado grande para guardarla.');
+    }
+
+    const existing = await db.collection('logoAssets')
+      .where('ownerId', '==', user.uid)
+      .get();
+    if (existing.size >= LOGO_LIMIT) {
+      throw new Error('Límite de ' + LOGO_LIMIT + ' logos por cuenta. Borra alguno para guardar otro.');
+    }
+
+    const now = firebase.firestore.FieldValue.serverTimestamp();
+    const ref = db.collection('logoAssets').doc();
+    const payload = {
+      ownerId: user.uid,
+      name: String(asset.name || 'Logo').trim().slice(0, 60) || 'Logo',
+      dataUrl: dataUrl,
+      thumbDataUrl: String(asset.thumbDataUrl || '').slice(0, 60 * 1024),
+      format: asset.format === 'png' ? 'png' : 'webp',
+      width: parseInt(asset.width, 10) || 0,
+      height: parseInt(asset.height, 10) || 0,
+      bytes: parseInt(asset.bytes, 10) || dataUrl.length,
+      createdAt: now,
+      updatedAt: now
+    };
+    await ref.set(payload);
+    cacheRemove(cacheKey(['logos', user.uid]));
+    return Object.assign({ id: ref.id }, payload);
+  }
+
+  async function deleteLogoAsset(id) {
+    const { auth, db } = init();
+    const user = auth.currentUser;
+    if (!user) throw new Error('Debes iniciar sesión.');
+    const ref = db.collection('logoAssets').doc(id);
+    const snap = await ref.get();
+    if (!snap.exists) return;
+    if (snap.data().ownerId !== user.uid) throw new Error('No tienes permiso.');
+    await ref.delete();
+    cacheRemove(cacheKey(['logos', user.uid]));
   }
 
   /**
@@ -702,6 +801,10 @@
     saveDesignPreset,
     deleteDesignPreset,
     migrateLocalDesignPresets,
+    listLogoAssets,
+    getLogoAsset,
+    saveLogoAsset,
+    deleteLogoAsset,
     cacheInvalidateUser,
     cacheInvalidateQr
   };

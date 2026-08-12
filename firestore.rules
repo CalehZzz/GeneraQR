@@ -23,6 +23,33 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['email', 'displayName', 'photoURL', 'createdAt', 'updatedAt']);
     }
 
+    // Logos guardados por cuenta (data URL ya comprimido: WebP/PNG con alfa)
+    match /logoAssets/{logoId} {
+      allow read: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+
+      allow create: if isSignedIn()
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.keys().hasAll([
+          'ownerId', 'name', 'dataUrl', 'format', 'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 60
+        && request.resource.data.dataUrl is string
+        && request.resource.data.dataUrl.size() <= 716800
+        && request.resource.data.dataUrl.matches('data:image/(webp|png|jpeg);base64,.*')
+        && request.resource.data.format in ['webp', 'png'];
+
+      allow update: if isOwner(resource.data.ownerId)
+        && request.resource.data.ownerId == resource.data.ownerId
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 60
+        && request.resource.data.dataUrl == resource.data.dataUrl;
+
+      allow delete: if isOwner(resource.data.ownerId);
+    }
+
     // Diseños / plantillas de estilo guardados por cuenta
     match /designPresets/{presetId} {
       allow read: if isSignedIn() && resource.data.ownerId == request.auth.uid;
