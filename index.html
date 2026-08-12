@@ -496,15 +496,16 @@
 
         <div class="field" id="logo-size-field" style="display:none;">
           <label class="field-label">Tamaño del logo</label>
-          <input type="range" id="logo-size" min="8" max="22" value="15">
-          <div class="range-label"><span>Discreto</span><span id="logo-size-val">15%</span><span>Máximo seguro</span></div>
+          <input type="range" id="logo-size" min="5" max="80" value="15">
+          <div class="range-label"><span>Discreto</span><span id="logo-size-val">15%</span><span>Enorme</span></div>
           <div class="contrast-warning" id="logo-size-warning">⚠ A este tamaño el QR puede fallar al escanear — pruébalo antes de usarlo</div>
+          <p class="field-hint">Sin tope: si el logo tiene fondo transparente (PNG/WebP) suele aguantar tamaños grandes. Escanéalo para confirmar.</p>
         </div>
 
         <div class="field" id="logo-padding-field" style="display:none;">
           <label class="field-label">Tamaño del fondo del logo</label>
-          <input type="range" id="logo-padding" min="15" max="50" value="20">
-          <div class="range-label"><span>Compacto</span><span id="logo-padding-val">20% del QR</span><span>Grande</span></div>
+          <input type="range" id="logo-padding" min="5" max="90" value="20">
+          <div class="range-label"><span>Compacto</span><span id="logo-padding-val">20% del QR</span><span>Enorme</span></div>
           <div class="contrast-warning" id="logo-padding-warning">⚠ A este tamaño el QR puede fallar al escanear — pruébalo antes de usarlo</div>
         </div>
 
@@ -513,6 +514,26 @@
           <div class="swatch-grid cols-2" id="logo-bg-group"></div>
           <div class="eyedrop-hint">Elige "Sin fondo" para que el logo quede directamente sobre el QR, sin ninguna forma detrás.</div>
         </div>
+      </div>
+
+      <div class="card">
+        <div class="tpl-card-head">
+          <p class="card-title">Galería de logos</p>
+          <button type="button" class="pill-btn" id="logo-gallery-refresh">Actualizar</button>
+        </div>
+        <p class="card-subtitle">Guarda tus logos en la cuenta para reutilizarlos en cualquier dispositivo. Se comprimen sin perder transparencia.</p>
+
+        <div class="field" id="logo-gallery-save-field" style="display:none;">
+          <div class="preset-save-row">
+            <input type="text" id="logo-gallery-name" placeholder="Nombre del logo (ej. Mi marca)" maxlength="60">
+            <button type="button" class="primary" id="logo-gallery-save">Guardar</button>
+          </div>
+          <p class="field-hint" id="logo-gallery-hint">Se guarda comprimido en WebP.</p>
+        </div>
+
+        <p class="dyn-loading" id="logo-gallery-loading" hidden>Cargando logos…</p>
+        <p class="preset-empty" id="logo-gallery-empty">Inicia sesión con Google para guardar logos en tu cuenta.</p>
+        <div class="logo-gallery" id="logo-gallery"></div>
       </div>
       </div>
 
@@ -527,13 +548,21 @@
           </div>
           <p class="field-hint" id="format-hint">PNG ideal para redes y uso general. SVG escala sin perder calidad (impresión y diseño).</p>
         </div>
-        <div class="field" style="margin-bottom:0;" id="size-field">
+        <div class="field" id="size-field">
           <label class="field-label">Resolución</label>
           <div class="segmented" id="size-group" style="width:100%;justify-content:center;display:flex;">
-            <button type="button" class="active" data-size="512" style="flex:1;">512px</button>
-            <button type="button" data-size="1024" style="flex:1;">1024px</button>
+            <button type="button" data-size="512" style="flex:1;">512px</button>
+            <button type="button" class="active" data-size="1024" style="flex:1;">1024px</button>
             <button type="button" data-size="2048" style="flex:1;">2048px</button>
           </div>
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label class="field-label" for="filename-input">Nombre del archivo</label>
+          <div class="filename-row">
+            <input type="text" id="filename-input" placeholder="codigo-qr" maxlength="60">
+            <span class="filename-ext" id="filename-ext">.png</span>
+          </div>
+          <p class="field-hint" id="download-help">En iPhone y Android se abre la hoja de compartir para guardar en Fotos o Archivos.</p>
         </div>
       </div>
 
@@ -965,6 +994,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
   <script src="./firebase-config.js"></script>
+  <script src="./js/save-file.js"></script>
+  <script src="./js/image-store.js"></script>
   <script src="./js/generaqr-firebase.js"></script>
   <script src="./js/dynamic-qr-panel.js"></script>
   <script src="./js/app.js"></script>

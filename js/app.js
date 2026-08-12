@@ -622,17 +622,8 @@
 
     const finalImg = new Image();
     finalImg.onload = () => {
-      logoImage = finalImg;
-      logoPreviewImg.src = outCanvas.toDataURL();
-      logoPreview.classList.add('show');
-      cropSection.classList.remove('show');
-      logoSizeField.style.display = 'block';
-      logoPaddingField.style.display = 'block';
-      logoBgField.style.display = 'block';
-      logoColorField.style.display = 'block';
-      drawLogoOnColorCanvas(finalImg);
-      checkLogoSafety();
-      scheduleGenerate();
+      // Recorte nuevo: deja de estar ligado a un logo de la galería
+      applyLogoImage(finalImg, { logoId: null });
     };
     finalImg.src = outCanvas.toDataURL();
   });
@@ -650,6 +641,8 @@
     logoImage = null;
     originalImage = null;
     rawOriginalImage = null;
+    activeLogoId = null;
+    renderLogoGallery();
     bgRemoveActive = false;
     bgRemoveToggle.classList.remove('active');
     bgRemoveToggle.textContent = '✂️ Quitar fondo de la imagen';
@@ -929,6 +922,7 @@
     }
     if(sizeField) sizeField.style.display = downloadFormat === 'png' ? 'block' : 'none';
     downloadBtn.textContent = downloadFormat === 'svg' ? 'Descargar SVG' : 'Descargar PNG';
+    syncFilenameExt();
   }
   if(formatGroup){
     formatGroup.querySelectorAll('button').forEach(btn => {
@@ -1035,9 +1029,59 @@
     });
   }
 
-  async function downloadSvgQr(){
+  /* ---------- nombre de archivo + guardado (iOS/Android incluidos) ----------
+     Los elementos se buscan al usarlos: estas funciones también se llaman
+     durante la inicialización, antes de que se declaren las constantes de más
+     abajo en el archivo. */
+  function chosenFilename(extension){
+    const input = document.getElementById('filename-input');
+    const raw = (input && input.value) || '';
+    const save = window.GeneraQRSave;
+    if(save) return save.safeFilename(raw, extension, 'codigo-qr');
+    return (raw.trim() || 'codigo-qr') + '.' + extension;
+  }
+
+  function syncFilenameExt(){
+    const el = document.getElementById('filename-ext');
+    if(el) el.textContent = '.' + downloadFormat;
+  }
+
+  function updateDownloadHelp(){
+    const help = document.getElementById('download-help');
+    if(!help) return;
+    const save = window.GeneraQRSave;
+    if(save && save.isMobile() && save.shareSupported()){
+      help.textContent = 'Al descargar se abre la hoja de compartir: elige “Guardar imagen” (Fotos) o “Guardar en Archivos”.';
+    } else if(save && save.isIOS()){
+      help.textContent = 'En iPhone la imagen se abre en una pestaña nueva: mantén pulsado para guardarla en Fotos.';
+    } else {
+      help.textContent = 'Se guarda en tu carpeta de descargas. Puedes cambiarle el nombre arriba.';
+    }
+  }
+
+  async function saveQrFile(blobOrCanvas, extension){
+    const save = window.GeneraQRSave;
+    const name = chosenFilename(extension);
+    if(!save){
+      // Último recurso si el helper no cargó
+      const link = document.createElement('a');
+      link.download = name;
+      link.href = blobOrCanvas instanceof Blob
+        ? URL.createObjectURL(blobOrCanvas)
+        : blobOrCanvas.toDataURL('image/png');
+      link.click();
+      return;
+    }
+    if(blobOrCanvas instanceof Blob){
+      await save.saveBlob(blobOrCanvas, name, { title: name });
+    } else {
+      await save.saveCanvas(blobOrCanvas, name, { title: name });
+    }
+  }
+
+  async function buildSvgBlob(){
     const text = (composeQrData() || '').trim();
-    if(!text) return;
+    if(!text) return null;
     const svgSize = Math.max(targetSize, 512);
     const options = {
       width: svgSize,
@@ -1056,31 +1100,34 @@
       options.imageOptions = {
         crossOrigin: 'anonymous',
         margin: 6,
-        imageSize: Math.min(0.35, Math.max(0.12, parseInt(logoSize.value, 10) / 100))
+        // Sin tope: respetamos el tamaño elegido por el usuario
+        imageSize: Math.max(0.05, parseInt(logoSize.value, 10) / 100)
       };
     }
     const qrObj = new QRCodeStyling(options);
-    await qrObj.download({ name: 'codigo-qr', extension: 'svg' });
+    const blob = await qrObj.getRawData('svg');
+    return blob instanceof Blob ? blob : new Blob([blob], { type: 'image/svg+xml' });
   }
 
   downloadBtn.addEventListener('click', async () => {
-    if(downloadFormat === 'svg'){
-      try{
-        downloadBtn.disabled = true;
-        await downloadSvgQr();
-      } catch(err){
-        console.error(err);
-        alert('No se pudo generar el SVG. Prueba de nuevo o descarga en PNG.');
-      } finally {
-        downloadBtn.disabled = !(composeQrData() || '').trim();
+    const originalLabel = downloadBtn.textContent;
+    downloadBtn.disabled = true;
+    try{
+      if(downloadFormat === 'svg'){
+        const blob = await buildSvgBlob();
+        if(!blob) return;
+        await saveQrFile(blob, 'svg');
+      } else {
+        if(!finalCanvas) return;
+        await saveQrFile(finalCanvas, 'png');
       }
-      return;
+    } catch(err){
+      console.error(err);
+      alert('No se pudo guardar la imagen. Inténtalo de nuevo.');
+    } finally {
+      downloadBtn.textContent = originalLabel;
+      downloadBtn.disabled = !(composeQrData() || '').trim();
     }
-    if(!finalCanvas) return;
-    const link = document.createElement('a');
-    link.download = 'codigo-qr.png';
-    link.href = finalCanvas.toDataURL('image/png');
-    link.click();
   });
 
   /* ---------- saved design presets (cuenta Firebase o localStorage) ---------- */
@@ -1115,7 +1162,8 @@
       logoBgShape: logoBgShape,
       logoSize: logoSize.value,
       logoPadding: logoPadding.value,
-      targetSize: targetSize
+      targetSize: targetSize,
+      logoId: activeLogoId || null
     };
   }
   function setActiveInGroup(containerId, value){
@@ -1178,6 +1226,11 @@
     checkLogoSafety();
     checkContrast();
     scheduleGenerate();
+
+    // El diseño puede traer un logo de la galería
+    if(preset.logoId && preset.logoId !== activeLogoId){
+      useLogoFromGallery(preset.logoId).catch(err => console.warn(err));
+    }
   }
   function renderPresets(){
     const presets = presetsCache;
@@ -1305,8 +1358,11 @@
             console.warn(err);
             loadLocalPresetsIntoCache();
           }
+          refreshLogoGallery(false).catch(err => console.warn(err));
         } else {
           loadLocalPresetsIntoCache();
+          logoGalleryCache = [];
+          renderLogoGallery();
         }
       });
     } catch(e){
@@ -1315,6 +1371,188 @@
     }
   }
   wirePresetAuthSync();
+
+  /* ---------- galería de logos (Firestore, comprimidos en WebP) ---------- */
+  const logoGalleryEl = document.getElementById('logo-gallery');
+  const logoGalleryEmpty = document.getElementById('logo-gallery-empty');
+  const logoGalleryLoading = document.getElementById('logo-gallery-loading');
+  const logoGallerySaveField = document.getElementById('logo-gallery-save-field');
+  const logoGalleryNameInput = document.getElementById('logo-gallery-name');
+  const logoGallerySaveBtn = document.getElementById('logo-gallery-save');
+  const logoGalleryHint = document.getElementById('logo-gallery-hint');
+  const logoGalleryRefreshBtn = document.getElementById('logo-gallery-refresh');
+
+  let logoGalleryCache = [];
+  let activeLogoId = null;
+  const logoDataCache = new Map(); // id -> dataUrl (evita releer Firestore)
+
+  function loggedIn(){
+    const fb = window.GeneraQRFirebase;
+    return !!(fb && fb.isConfigured() && fb.getCurrentUser && fb.getCurrentUser());
+  }
+
+  function updateLogoGalleryVisibility(){
+    const hasLogo = !!logoImage;
+    if(logoGallerySaveField){
+      logoGallerySaveField.style.display = hasLogo && loggedIn() ? 'block' : 'none';
+    }
+    if(logoGalleryEmpty){
+      if(!loggedIn()){
+        logoGalleryEmpty.textContent = 'Inicia sesión con Google para guardar logos en tu cuenta.';
+        logoGalleryEmpty.style.display = 'block';
+      } else if(!logoGalleryCache.length){
+        logoGalleryEmpty.textContent = hasLogo
+          ? 'Aún no has guardado logos. Ponle nombre y pulsa Guardar.'
+          : 'Aún no has guardado logos. Sube una imagen arriba para guardarla aquí.';
+        logoGalleryEmpty.style.display = 'block';
+      } else {
+        logoGalleryEmpty.style.display = 'none';
+      }
+    }
+  }
+
+  function renderLogoGallery(){
+    if(!logoGalleryEl) return;
+    logoGalleryEl.innerHTML = '';
+    logoGalleryCache.forEach(logo => {
+      const chip = document.createElement('div');
+      chip.className = 'logo-chip' + (logo.id === activeLogoId ? ' active' : '');
+      chip.title = logo.name || 'Logo';
+      const src = logo.thumbDataUrl || logo.dataUrl || '';
+      chip.innerHTML =
+        `<img src="${escapeHtml(src)}" alt="${escapeHtml(logo.name || 'Logo')}">` +
+        `<span class="logo-chip-name">${escapeHtml(logo.name || 'Logo')}</span>` +
+        `<button type="button" class="logo-chip-del" aria-label="Borrar logo">×</button>`;
+      chip.addEventListener('click', (e) => {
+        if(e.target.closest('.logo-chip-del')) return;
+        useLogoFromGallery(logo.id).catch(err => alert(err.message || 'No se pudo usar el logo.'));
+      });
+      chip.querySelector('.logo-chip-del').addEventListener('click', async (e) => {
+        e.stopPropagation();
+        if(!confirm(`¿Borrar el logo "${logo.name || 'Logo'}" de tu cuenta?`)) return;
+        try{
+          await window.GeneraQRFirebase.deleteLogoAsset(logo.id);
+          logoDataCache.delete(logo.id);
+          if(activeLogoId === logo.id) activeLogoId = null;
+          await refreshLogoGallery(true);
+        } catch(err){
+          alert(err.message || 'No se pudo borrar el logo.');
+        }
+      });
+      logoGalleryEl.appendChild(chip);
+    });
+    updateLogoGalleryVisibility();
+  }
+
+  async function refreshLogoGallery(force){
+    if(!loggedIn()){
+      logoGalleryCache = [];
+      renderLogoGallery();
+      return;
+    }
+    if(logoGalleryLoading && force) logoGalleryLoading.hidden = false;
+    try{
+      logoGalleryCache = await window.GeneraQRFirebase.listLogoAssets({ force: !!force });
+      logoGalleryCache.forEach(l => {
+        if(l.dataUrl) logoDataCache.set(l.id, l.dataUrl);
+      });
+      renderLogoGallery();
+    } catch(err){
+      console.warn('Galería de logos:', err);
+      if(err && err.code === 'failed-precondition'){
+        alert('Falta un índice en Firestore para logoAssets (ownerId + updatedAt). Abre el enlace del error en la consola.');
+      }
+    } finally {
+      if(logoGalleryLoading) logoGalleryLoading.hidden = true;
+    }
+  }
+
+  /** Carga un logo de la galería y lo aplica al QR. */
+  async function useLogoFromGallery(id){
+    let dataUrl = logoDataCache.get(id);
+    if(!dataUrl){
+      const asset = await window.GeneraQRFirebase.getLogoAsset(id);
+      if(!asset || !asset.dataUrl) throw new Error('Ese logo ya no está disponible.');
+      dataUrl = asset.dataUrl;
+      logoDataCache.set(id, dataUrl);
+    }
+    const img = await window.GeneraQRImageStore.loadImage(dataUrl);
+    applyLogoImage(img, { logoId: id, setOriginal: true });
+  }
+
+  /** Punto único para activar un logo (subida nueva o galería). */
+  function applyLogoImage(img, opts){
+    const options = opts || {};
+    logoImage = img;
+    if(options.setOriginal){
+      // Logo traído de la galería: pasa a ser la base para recortar
+      originalImage = img;
+      rawOriginalImage = img;
+      bgRemoveActive = false;
+      bgRemoveToggle.classList.remove('active');
+      bgRemoveField.style.display = 'none';
+    }
+    activeLogoId = options.logoId || null;
+
+    logoPreviewImg.src = img.src;
+    logoPreview.classList.add('show');
+    cropSection.classList.remove('show');
+    uploadBox.style.display = 'none';
+    logoSizeField.style.display = 'block';
+    logoPaddingField.style.display = 'block';
+    logoBgField.style.display = 'block';
+    logoColorField.style.display = 'block';
+    drawLogoOnColorCanvas(img);
+    checkLogoSafety();
+    renderLogoGallery();
+    scheduleGenerate();
+  }
+
+  async function saveCurrentLogoToGallery(){
+    if(!logoImage) return;
+    if(!loggedIn()){
+      alert('Inicia sesión con Google para guardar logos en tu cuenta.');
+      return;
+    }
+    logoGallerySaveBtn.disabled = true;
+    const prevHint = logoGalleryHint ? logoGalleryHint.textContent : '';
+    try{
+      if(logoGalleryHint) logoGalleryHint.textContent = 'Comprimiendo imagen…';
+      const compressed = window.GeneraQRImageStore.compressLogo(logoImage);
+      const name = (logoGalleryNameInput && logoGalleryNameInput.value.trim()) || 'Logo';
+      const saved = await window.GeneraQRFirebase.saveLogoAsset({
+        name: name,
+        dataUrl: compressed.dataUrl,
+        thumbDataUrl: compressed.thumbDataUrl,
+        format: compressed.format,
+        width: compressed.width,
+        height: compressed.height,
+        bytes: compressed.bytes
+      });
+      logoDataCache.set(saved.id, compressed.dataUrl);
+      activeLogoId = saved.id;
+      if(logoGalleryNameInput) logoGalleryNameInput.value = '';
+      if(logoGalleryHint){
+        logoGalleryHint.textContent = `Guardado en ${compressed.format.toUpperCase()} · ${window.GeneraQRImageStore.formatBytes(compressed.bytes)} (${compressed.width}×${compressed.height}).`;
+      }
+      await refreshLogoGallery(true);
+    } catch(err){
+      console.error(err);
+      if(logoGalleryHint) logoGalleryHint.textContent = prevHint;
+      alert(err.message || 'No se pudo guardar el logo.');
+    } finally {
+      logoGallerySaveBtn.disabled = false;
+    }
+  }
+
+  function wireLogoGallery(){
+    if(logoGallerySaveBtn) logoGallerySaveBtn.addEventListener('click', saveCurrentLogoToGallery);
+    if(logoGalleryRefreshBtn){
+      logoGalleryRefreshBtn.addEventListener('click', () => refreshLogoGallery(true));
+    }
+    updateLogoGalleryVisibility();
+    if(loggedIn()) refreshLogoGallery(false).catch(err => console.warn(err));
+  }
 
 /* ---------- creative templates ---------- */
   /* Ordenadas de mayor a menor uso habitual. Cada una con paleta, tipografía,
@@ -1906,16 +2144,32 @@
     tplState.useMainStyle = tplUseMainStyle.checked;
     renderTemplate();
   });
-  tplDownloadBtn.addEventListener('click', () => {
+  tplDownloadBtn.addEventListener('click', async () => {
     if(!currentTemplate) return;
-    const link = document.createElement('a');
-    link.download = `generaqr-${currentTemplate.id}.png`;
-    link.href = tplCanvas.toDataURL('image/png');
-    link.click();
+    const name = `generaqr-${currentTemplate.id}.png`;
+    tplDownloadBtn.disabled = true;
+    try{
+      if(window.GeneraQRSave){
+        await window.GeneraQRSave.saveCanvas(tplCanvas, name, { title: name });
+      } else {
+        const link = document.createElement('a');
+        link.download = name;
+        link.href = tplCanvas.toDataURL('image/png');
+        link.click();
+      }
+    } catch(err){
+      console.error(err);
+      alert('No se pudo guardar el diseño. Inténtalo de nuevo.');
+    } finally {
+      tplDownloadBtn.disabled = false;
+    }
   });
 
   buildGallery();
 
   /* ---------- init ---------- */
+  syncFilenameExt();
+  updateDownloadHelp();
+  wireLogoGallery();
   checkContrast();
   generate(false);

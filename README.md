@@ -9,14 +9,16 @@ Generador de códigos QR gratis en el navegador, con plantillas creativas y **QR
 | `index.html` | Marcado de la app |
 | `css/styles.css` | Estilos |
 | `js/app.js` | Diseñador + plantillas creativas |
-| `js/generaqr-firebase.js` | Auth, Firestore, QR dinámicos |
+| `js/generaqr-firebase.js` | Auth, Firestore, QR dinámicos, galería de logos |
 | `js/dynamic-qr-panel.js` | UI del panel dinámico |
+| `js/save-file.js` | Guardado de archivos (iOS/Android incluidos) |
+| `js/image-store.js` | Compresión WebP de logos antes de subirlos |
 | `js/redirect.js` + `d.html` / `404.html` | Redirección de enlaces cortos |
 | `firebase-config.js` | Claves del proyecto Firebase |
 
 ## Modos
 
-- **Diseñador QR** — personaliza colores, formas y logo; descarga PNG/SVG; incluye contacto (vCard). Los diseños guardados van a tu cuenta si inicias sesión con Google.
+- **Diseñador QR** — personaliza colores, formas y logo (sin tope de tamaño); descarga PNG/SVG con el nombre que elijas; incluye contacto (vCard). Los diseños y los logos guardados van a tu cuenta si inicias sesión con Google.
 - **Plantillas creativas** — diseños listos para editar. Sin cuenta.
 - **QR dinámico** — enlace corto fijo, página intermedia opcional, destino editable, estadísticas con gráfico (14 días) y versiones al cambiar la URL. Requiere Google + Firebase.
 
@@ -29,7 +31,13 @@ Resumen:
 1. Crea app Web en Firebase y pega la config en `firebase-config.js`
 2. Activa Authentication → Google y añade `generaqr.xyz` a dominios autorizados
 3. Crea Firestore y publica `firestore.rules`
-4. Crea el índice compuesto `ownerId` + `updatedAt` en `dynamicQrs` (el error de consola incluye el enlace)
+4. Crea los índices compuestos `ownerId` + fecha en `dynamicQrs`, `versions`, `designPresets` y `logoAssets` (el error de consola incluye el enlace)
+
+## Descargas en móvil
+
+En iPhone un enlace con `download` y un `data:` URL no guarda nada. Las descargas
+usan `Blob` y, en móvil, la hoja de compartir del sistema para permitir
+**Guardar en Fotos** o **Guardar en Archivos**.
 
 ## Enlaces cortos
 

@@ -62,6 +62,19 @@ Sin el dominio autorizado, el login con Google falla con `auth/unauthorized-doma
 | Leer un QR por código (redirección) | Público (`get`) |
 | Sumar +1 escaneo en la versión actual | Público, solo campos de contador |
 | Ver historial de versiones | Solo el dueño |
+| Leer / guardar / borrar tus logos | Solo el dueño |
+
+### Cómo se guardan los logos
+
+Guardar un PNG tal cual saturaría Firestore: un documento admite como máximo
+1 MiB y un logo puede pesar varios megas. Antes de subirlo, el navegador lo
+reescala a 512 px de lado máximo y lo codifica en **WebP con transparencia**,
+que a ese tamaño ronda 10–40 KB (unas 40 veces menos que el PNG original) sin
+diferencia visible en el QR. Si el navegador no puede codificar WebP se usa PNG
+reducido, que también conserva el alfa.
+
+Cada logo guarda además una miniatura de 96 px para la galería, de modo que la
+caché local no tenga que arrastrar la imagen completa.
 
 ## 5. Índice compuesto (obligatorio para el listado)
 
@@ -87,6 +100,11 @@ Para los **diseños guardados por cuenta** (pestaña Descargar → Guardar dise�
 - Campos: `ownerId` Ascending + `updatedAt` Descending
 
 Al iniciar sesión, los diseños que tenías solo en el navegador se migran una vez a tu cuenta.
+
+Para la **galería de logos** (pestaña Logo):
+
+- Colección: `logoAssets`
+- Campos: `ownerId` Ascending + `updatedAt` Descending
 
 ## 6. Google Cloud / OAuth (pantalla de consentimiento)
 
@@ -139,7 +157,7 @@ Por cada versión del enlace:
 - [ ] Dominios autorizados (`generaqr.xyz`, `localhost`)
 - [ ] Firestore creado
 - [ ] Reglas de `firestore.rules` publicadas
-- [ ] Índices: `dynamicQrs`, `versions` y `designPresets` (ownerId + fecha)
+- [ ] Índices: `dynamicQrs`, `versions`, `designPresets` y `logoAssets` (ownerId + fecha)
 - [ ] OAuth consent screen / usuarios de prueba si aplica
 - [ ] Probar: login → crear QR → abrir `/r/CODIGO` → ver +1 en estadísticas → cambiar URL → ver versión nueva en cero
 - [ ] Probar: login → Guardar diseño → cerrar sesión / otro dispositivo → ver el mismo diseño
