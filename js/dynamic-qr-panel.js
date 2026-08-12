@@ -11,7 +11,8 @@
   let listCache = [];
   let detailQr = null;
   let versionsCache = [];
-  let previewQr = null;
+  let previewToken = 0;
+  const logoImageCache = new Map(); // logoId -> HTMLImageElement
 
   const DEFAULT_STYLE = {
     dotsType: 'rounded',
@@ -230,9 +231,13 @@
     if (loading && force) loading.hidden = false;
 
     try {
-      detailQr = await api().getDynamicQr(id, { force: !!force });
-      if (!detailQr) throw new Error('QR no encontrado.');
-      versionsCache = await api().listVersions(id, { force: !!force });
+      const [qr, versions] = await Promise.all([
+        api().getDynamicQr(id, { force: !!force }),
+        api().listVersions(id, { force: !!force })
+      ]);
+      if (!qr) throw new Error('QR no encontrado.');
+      detailQr = qr;
+      versionsCache = versions;
       renderDetail();
       // Refresh silencioso en segundo plano
       if (!force) {
@@ -259,26 +264,38 @@
     return versionsCache.find((v) => v.id === detailQr.currentVersionId) || versionsCache[0] || null;
   }
 
-  function colorOptionFromState(state, fallback) {
-    const s = state || fallback || { mode: 'solid', color1: '#1D1D1F' };
-    if (s.mode === 'gradient') {
-      return {
-        type: 'gradient',
-        gradient: {
-          type: s.gradType || 'linear',
-          rotation: ((s.angle || 0) * Math.PI) / 180,
-          colorStops: [
-            { offset: 0, color: s.color1 || '#0A84FF' },
-            { offset: 1, color: s.color2 || '#FF375F' }
-          ]
-        }
-      };
-    }
-    return { color: s.color1 || '#1D1D1F' };
-  }
-
   function activeStyle() {
     return detailQr && detailQr.qrStyle ? detailQr.qrStyle : DEFAULT_STYLE;
+  }
+
+  /** Carga (y cachea) el logo del diseño aplicado a este QR. */
+  async function activeLogoImage() {
+    const style = activeStyle();
+    const logoId = style && style.logoId;
+    if (!logoId) return null;
+    if (logoImageCache.has(logoId)) return logoImageCache.get(logoId);
+    try {
+      const asset = await api().getLogoAsset(logoId);
+      if (!asset || !asset.dataUrl) return null;
+      const img = await window.GeneraQRImageStore.loadImage(asset.dataUrl);
+      logoImageCache.set(logoId, img);
+      return img;
+    } catch (err) {
+      console.warn('No se pudo cargar el logo del diseño:', err);
+      return null;
+    }
+  }
+
+  /** Opciones de render con el diseño aplicado (incluido el logo). */
+  async function renderOptionsForQr(size) {
+    const style = activeStyle();
+    const logo = await activeLogoImage();
+    return window.GeneraQRRender.optionsFromStyle(style, {
+      size: size,
+      logoImage: logo,
+      // El enlace corto es corto: con corrección alta el logo tapa sin romperlo
+      errorCorrectionLevel: 'H'
+    });
   }
 
   function renderDetail() {
@@ -310,8 +327,10 @@
 
     const styleNote = $('dyn-style-note');
     if (styleNote) {
+      const style = activeStyle();
+      const withLogo = style && style.logoId ? ' · con logo' : '';
       styleNote.textContent = detailQr.styleName
-        ? ('Estilo: ' + detailQr.styleName)
+        ? ('Diseño: ' + detailQr.styleName + withLogo)
         : 'Estilo por defecto';
     }
 
@@ -477,38 +496,32 @@
     });
   }
 
-  function renderPreview(shortUrl) {
+  /**
+   * Vista previa con el diseño aplicado. Se genera a 640 px y se muestra
+   * reducida por CSS: así se ve nítida en pantallas retina en lugar de pixelada.
+   */
+  async function renderPreview(shortUrl) {
     const holder = $('dyn-qr-holder');
     if (!holder) return;
-    holder.innerHTML = '';
-    if (typeof QRCodeStyling === 'undefined') {
+    if (typeof QRCodeStyling === 'undefined' || !window.GeneraQRRender) {
       holder.innerHTML = '<p class="field-hint">Vista previa no disponible.</p>';
       return;
     }
-    const style = activeStyle();
-    const size = 220;
-    previewQr = new QRCodeStyling({
-      width: size,
-      height: size,
-      type: 'canvas',
-      data: shortUrl,
-      margin: 8,
-      qrOptions: { errorCorrectionLevel: 'M' },
-      dotsOptions: Object.assign(
-        { type: style.dotsType || 'rounded' },
-        colorOptionFromState(style.colorState && style.colorState.dots, DEFAULT_STYLE.colorState.dots)
-      ),
-      cornersSquareOptions: Object.assign(
-        { type: style.csquareType || 'extra-rounded' },
-        colorOptionFromState(style.colorState && style.colorState.csquare, DEFAULT_STYLE.colorState.csquare)
-      ),
-      cornersDotOptions: Object.assign(
-        { type: style.cdotType || 'dot' },
-        colorOptionFromState(style.colorState && style.colorState.cdot, DEFAULT_STYLE.colorState.cdot)
-      ),
-      backgroundOptions: { color: style.bgColor || '#FFFFFF' }
-    });
-    previewQr.append(holder);
+    const token = ++previewToken;
+    try {
+      const opts = await renderOptionsForQr(640);
+      const canvas = await window.GeneraQRRender.renderQrCanvas(
+        Object.assign(opts, { data: shortUrl })
+      );
+      if (token !== previewToken) return;
+      holder.innerHTML = '';
+      holder.appendChild(canvas);
+    } catch (err) {
+      console.error(err);
+      if (token === previewToken) {
+        holder.innerHTML = '<p class="field-hint">No se pudo generar la vista previa.</p>';
+      }
+    }
   }
 
   async function handleCreate(e) {
@@ -624,27 +637,22 @@
     const save = window.GeneraQRSave;
     const base = (detailQr.title || 'generaqr-dinamico-' + detailQr.id);
     const name = save ? save.safeFilename(base, 'png', 'codigo-qr') : base + '.png';
-    const canvas = $('dyn-qr-holder') && $('dyn-qr-holder').querySelector('canvas');
+    const btn = $('dyn-download-qr');
+    if (btn) btn.disabled = true;
 
     try {
-      if (save && canvas) {
-        // Vuelve a generar a mayor resolución para imprimir
-        const big = document.createElement('canvas');
-        big.width = 1024;
-        big.height = 1024;
-        const ctx = big.getContext('2d');
-        ctx.imageSmoothingEnabled = false;
-        ctx.drawImage(canvas, 0, 0, big.width, big.height);
-        const result = await save.saveCanvas(big, name, { title: name });
-        if (result === 'shared') showToast('Elige “Guardar imagen” o “Guardar en Archivos”');
-        return;
-      }
-      if (previewQr) {
-        await previewQr.download({ name: name.replace(/\.png$/i, ''), extension: 'png' });
-      }
+      // Se genera de nuevo a 1024 px: escalar la vista previa dejaba el PNG pixelado
+      const opts = await renderOptionsForQr(1024);
+      const canvas = await window.GeneraQRRender.renderQrCanvas(
+        Object.assign(opts, { data: api().shortLink(detailQr.id) })
+      );
+      const result = await save.saveCanvas(canvas, name, { title: name });
+      if (result === 'shared') showToast('Elige “Guardar imagen” o “Guardar en Archivos”');
     } catch (err) {
       console.error(err);
       showToast('No se pudo guardar el QR. Inténtalo de nuevo.', true);
+    } finally {
+      if (btn) btn.disabled = false;
     }
   }
 
@@ -701,11 +709,14 @@
       btn.className = 'dyn-preset-pick-item';
       const bg = p.bgColor || '#fff';
       const dot = (p.colorState && p.colorState.dots && p.colorState.dots.color1) || '#1D1D1F';
+      const logoBadge = p.logoId
+        ? '<span class="dyn-badge" style="margin-top:0;margin-left:6px;">con logo</span>'
+        : '';
       btn.innerHTML =
         '<span class="preset-swatch" style="background:' + escapeHtml(bg) + '">' +
           '<span class="preset-dot" style="background:' + escapeHtml(dot) + '"></span>' +
         '</span>' +
-        '<span class="preset-name">' + escapeHtml(p.name || 'Diseño') + '</span>';
+        '<span class="preset-name">' + escapeHtml(p.name || 'Diseño') + logoBadge + '</span>';
       btn.addEventListener('click', () => applyPresetToCurrentQr(p));
       list.appendChild(btn);
     });
