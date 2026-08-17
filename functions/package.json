@@ -2,7 +2,7 @@
   "name": "generaqr-functions",
   "description": "API pública de GeneraQR: expone el diseño de QR activo para que apps externas (ej. PICO) lo consuman, y permite a la cuenta dueña elegir/publicar cuál diseño está activo.",
   "engines": {
-    "node": "20"
+    "node": "22"
   },
   "main": "index.js",
   "scripts": {
