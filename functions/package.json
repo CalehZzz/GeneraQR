@@ -1,0 +1,19 @@
+{
+  "name": "generaqr-functions",
+  "description": "API pública de GeneraQR: expone el diseño de QR activo para que apps externas (ej. PICO) lo consuman, y permite a la cuenta dueña elegir/publicar cuál diseño está activo.",
+  "engines": {
+    "node": "20"
+  },
+  "main": "index.js",
+  "scripts": {
+    "serve": "firebase emulators:start --only functions",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "firebase-admin": "^12.6.0",
+    "firebase-functions": "^5.1.1"
+  },
+  "private": true
+}

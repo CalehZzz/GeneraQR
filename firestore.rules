@@ -74,6 +74,14 @@ service cloud.firestore {
       allow delete: if isOwner(resource.data.ownerId);
     }
 
+    // Config pública expuesta a apps externas (ej. PICO) vía Cloud Functions.
+    // Solo el Admin SDK (Cloud Functions) puede escribir aquí; los clientes
+    // solo pueden leer el diseño activo publicado.
+    match /publicConfig/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     match /dynamicQrs/{qrId} {
       // Lectura pública: la página de redirección necesita targetUrl y currentVersionId
       allow get: if true;
